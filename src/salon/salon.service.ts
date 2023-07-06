@@ -12,12 +12,24 @@ export class SalonService {
 
     
     getSalons(){
-        return this.salonRepository.find({relations: ['employees']});
+        return this.salonRepository.find({relations: []});
     }
     getSalon(idToFind: number){
        return this.salonRepository.findOneBy({id: idToFind});
     }
-
+    getSalonServiceCategories(idToFind: number){
+        return this.salonRepository.findOne({relations: ['serviceCategories'], where: {id: idToFind}});
+    }
+    getSalonAppointments(idToFind: number){
+        return this.salonRepository.findOne({relations: ['appointments'], where: {id: idToFind}});
+    }
+    getSalonInventories(idToFind: number){
+        return this.salonRepository.findOne({relations: ['inventories'], where: {id: idToFind}});
+    }
+    getSalonEmployess(idToFind: number){
+        return this.salonRepository.findOne({relations: ['employees'], where: {id: idToFind}});
+    }
+  
     createSalon(newSalon: createSalonDto){
         const salonToSave = this.salonRepository.create({...newSalon});
         return this.salonRepository.save(salonToSave)

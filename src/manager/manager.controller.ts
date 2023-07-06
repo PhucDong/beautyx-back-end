@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, UsePipes, ValidationPipe } from '@nestjs/common';
 import { ManagerService } from './manager.service';
 import { createManagerDto } from 'src/DTOs/ManagerDto';
 
@@ -22,11 +22,13 @@ export class ManagerController {
     }
 
     @Post('create/salon/id/:id')
+    @UsePipes(ValidationPipe)
     createManager(@Param('id', ParseIntPipe) salonId: number, @Body() newManager: createManagerDto){
         return this.managerService.createManager(salonId, newManager)
     }
     
     @Put('update/id/:id')
+    @UsePipes(ValidationPipe)
     async updateManager(@Param('id', ParseIntPipe) idToUpdate: number, @Body() updateDetails: createManagerDto){
         const updatedManager = await this.managerService.updateManager(idToUpdate, updateDetails)
         return updatedManager;

@@ -13,13 +13,16 @@ export class ServiceCategoryService {
         ) {}
 
     
-        getServiceCategories(){
+    getServiceCategories(){
         return this.serviceCategoryRepository.find({relations: ['services']});
     }
     getServiceCategory(idToFind: number){
        return this.serviceCategoryRepository.findOneBy({id: idToFind});
     }
-
+    getServiceCategoryServices(idToFind: number){
+        return this.serviceCategoryRepository.findOne({relations: ['services'], where: {id: idToFind}});
+    }
+    
     async createServiceCategory(salonId: number, newCategory: createServiceCategoryDto){
 
         const salonToUpdate = await this.salonRepository.findOne({

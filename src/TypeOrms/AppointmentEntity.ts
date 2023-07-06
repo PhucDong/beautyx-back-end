@@ -5,18 +5,46 @@ import { SalonEntity } from "./SalonEntity";
 import { ServiceEntity } from "./ServiceEntity";
 import { ReviewEntity } from "./ReviewEntity";
 
+export enum ApprovalStatusEnum {
+    APPROVED = 'approved',
+    DENIED = 'denied',
+    PENDING = 'pending',
+    COMPLETED = 'completed'
+  }
+
 @Entity()
 export class AppointmentEntity {
     @PrimaryGeneratedColumn({
         type: 'bigint'
     })    
     id: number;
-    
-    @Column({
-        default: false
-    })
-    approvalStatus: boolean
 
+    @Column()
+    appointmentDate: Date
+
+    @Column({
+        type: 'time'
+    })
+    startTime: Date
+
+    @Column({
+        type: 'time',
+        nullable: true
+    })
+    endTime: Date
+
+    @Column({
+        type: 'time'
+    })
+    estimatedEndTime: Date
+
+    @Column({
+        type: 'enum',
+        enum: ApprovalStatusEnum,
+        default: ApprovalStatusEnum.PENDING
+    })
+    approvalStatus: ApprovalStatusEnum
+ 
     @ManyToOne(() => SalonEntity, (salon) => salon.appointments)
     salon: SalonEntity
     

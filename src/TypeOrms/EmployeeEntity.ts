@@ -23,6 +23,9 @@ export class EmployeeEntity extends Profile{
         type: 'time'
     })
     endTime: Date
+    
+    @Column()
+    workDays: string
 
     @Column({
         nullable: false

@@ -20,6 +20,7 @@ export class InventoryService {
        return this.inventoryRepository.findOneBy({id: idToFind});
     }
 
+
     async createInventory(salonId: number, newInventory: createInventoryDto){
         const salonToUpdate = await this.salonRepository.findOne({
             where: { id: salonId },

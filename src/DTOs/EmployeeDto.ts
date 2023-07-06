@@ -1,21 +1,21 @@
-import { IsEmail, IsEnum, IsNotEmpty, IsNumber } from "class-validator"
+import { IsDateString, IsEmail, IsEnum, IsNotEmpty, IsNumber, IsNumberString, Matches } from "class-validator"
 import { GenderEnum } from "src/TypeOrms/Profile"
 
 export class createEmployeeDto{
     //user section
     @IsNotEmpty()
-    fisrtname: string
+    firstname: string
+
     @IsNotEmpty()
     lastname: string
 
-    @IsNotEmpty()
     @IsEmail()
     email: string
 
-    @IsNotEmpty()
+    @IsNumberString()
     phone: string
 
-    @IsNotEmpty()
+    @IsDateString()
     dateOfBirth: Date
 
     @IsNotEmpty()
@@ -24,7 +24,6 @@ export class createEmployeeDto{
     @IsNotEmpty()
     address: string
     
-    @IsNotEmpty()
     @IsEnum(GenderEnum)
     gender: GenderEnum
 
@@ -34,12 +33,15 @@ export class createEmployeeDto{
     job: string
 
     @IsNotEmpty()
+    workDays: string
+
+    //@Matches(/^(1[0-2]|0?[0-9]):([0-5]?[0-9]):([0-5]?[0-9])$/)
+    @Matches(/^([0-1]?[0-9]|2?[0-4]):([0-5]?[0-9]):([0-5]?[0-9])$/)
     startTime: Date
 
-    @IsNotEmpty()
+    @Matches(/^([0-1]?[0-9]|2?[0-4]):([0-5]?[0-9]):([0-5]?[0-9])$/)
     endTime: Date
 
-    @IsNotEmpty()
     @IsNumber()
     salary: number
     
@@ -50,15 +52,18 @@ export class createEmployeeDto{
 }   
 export class updateEmployeeDto{
     //user section
-    fisrtname: string
+    fisrtnames: string
+
     lastname: string
 
     @IsEmail()
     email: string
 
+    @IsNumberString()
     phone: string
 
-    DateOfBirth: Date
+    @IsDateString()
+    dateOfBirth: Date
 
     city: string
 
@@ -70,18 +75,46 @@ export class updateEmployeeDto{
     //employee section
 
     job: string
-
+    
+    @Matches(/^([0-1]?[0-9]|2?[0-4]):([0-5]?[0-9]):([0-5]?[0-9])$/)
     startTime: Date
 
+    @Matches(/^([0-1]?[0-9]|2?[0-4]):([0-5]?[0-9]):([0-5]?[0-9])$/)
     endTime: Date
+
+    workDays: string
+
     @IsNumber()
     salary: number
     
     experience: string
-    @IsNumber()
+
+    //@IsNumber()
     pastAppointment: number
 
-    @IsNumber()
+    //@IsNumber()
     rating: number
  
 }   
+
+export class updateEmployeeWorkDayDto {
+
+    @IsNotEmpty()
+    workDays: string
+
+}
+
+export class getEmployeesAvailableDto {
+
+    @IsDateString()
+    appointmentDate: Date
+
+    
+    @Matches(/^([0-1]?[0-9]|2?[0-4]):([0-5]?[0-9]):([0-5]?[0-9])$/)
+    startTime: Date
+
+   
+    @Matches(/^([0-1]?[0-9]|2?[0-4]):([0-5]?[0-9]):([0-5]?[0-9])$/)
+    estimatedEndTime: Date
+
+}

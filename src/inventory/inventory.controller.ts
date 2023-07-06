@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, UsePipes, ValidationPipe } from '@nestjs/common';
 import { InventoryService } from './inventory.service';
 import { createInventoryDto, updateInventoryDto } from 'src/DTOs/InventoyDto';
 
@@ -18,11 +18,13 @@ export class InventoryController {
     }
 
     @Post('create/salon/id/:salonId')
+    @UsePipes(ValidationPipe)
     createInventory(@Param('salonId', ParseIntPipe) salonId: number, @Body() newInventory: createInventoryDto){
         return this.inventoryService.createInventory(salonId, newInventory)
     }
     
     @Put('update/id/:id')
+    @UsePipes(ValidationPipe)
     async updateInventory(@Param('id', ParseIntPipe) idToUpdate: number, @Body() updateDetails: updateInventoryDto){
         const updatedInventory = await this.inventoryService.updateInventory(idToUpdate, updateDetails)
         return updatedInventory;

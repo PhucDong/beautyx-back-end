@@ -1,4 +1,4 @@
-import { IsEmail, IsEnum, IsNotEmpty } from "class-validator"
+import { IsDateString, IsEmail, IsEnum, IsNotEmpty, IsNumberString } from "class-validator"
 import { GenderEnum } from "src/TypeOrms/Profile"
 
 export class createManagerDto{
@@ -7,17 +7,17 @@ export class createManagerDto{
 
     @IsNotEmpty()
     fisrtname: string
+
     @IsNotEmpty()
     lastname: string
 
-    @IsNotEmpty()
     @IsEmail()
     email: string
 
-    @IsNotEmpty()
+    @IsNumberString()
     phone: string
 
-    @IsNotEmpty()
+    @IsDateString()
     dateOfBirth: Date
 
     @IsNotEmpty()
@@ -26,7 +26,6 @@ export class createManagerDto{
     @IsNotEmpty()
     address: string
     
-    @IsNotEmpty()
     @IsEnum(GenderEnum)
     gender: GenderEnum
 
@@ -40,14 +39,17 @@ export class updateUserDto{
     //profile section
 
     fisrtname: string
+
     lastname: string
 
     @IsEmail()
     email: string
 
+    @IsNumberString()
     phone: string
-
-    DateOfBirth: Date
+    
+    @IsDateString()
+    dateOfBirth: Date
 
     city: string
 

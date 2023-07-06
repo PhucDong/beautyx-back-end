@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { createAppointmentDto, updateAppointmentDto } from 'src/DTOs/AppointmentDto';
-import { AppointmentEntity } from 'src/TypeOrms/AppointmentEntity';
+import { createAppointmentDto, updateAppointmentDto, updateAppointmentServicesDto, updateAppointmentStatusDto } from 'src/DTOs/AppointmentDto';
+import { AppointmentEntity, ApprovalStatusEnum } from 'src/TypeOrms/AppointmentEntity';
 import { CustomerEntity } from 'src/TypeOrms/CustomerEntity';
 import { EmployeeEntity } from 'src/TypeOrms/EmployeeEntity';
 import { SalonEntity } from 'src/TypeOrms/SalonEntity';
@@ -21,12 +21,15 @@ export class AppointmentService {
 
     
     getAppointments(){
-        return this.appointmentRepository.find({relations: ['review', 'employee', 'customer', 'services', 'salon']});
+        return this.appointmentRepository.find({relations: []});
     }
     getAppointment(idToFind: number){
        return this.appointmentRepository.findOneBy({id: idToFind});
     }
-
+    getAppointmentDetails(idToFind: number){
+        return this.appointmentRepository.findOne({relations: ['services', 'review'], where: {id: idToFind}});
+    }
+    
     async createAppointment(salonId: number, employeeId: number, customerId: number, services: createAppointmentDto){
         const salonToUpdate = await this.salonRepository.findOne({
             where: { id: salonId },
@@ -46,8 +49,9 @@ export class AppointmentService {
         })
         if (!customerToBook) throw new HttpException('customer cannot be found to book new appointment', HttpStatus.NOT_FOUND)
 
-        const serviceList = await this.serviceRepository.find( {where: {id: In( services.services ) } } )
-        console.log("this is the list of service the customer requested -----------------")
+    
+        const serviceList = await this.serviceRepository.find( {where: {id: In( services.services  ) } } )
+        console.log("this is the list of service the customer requested ------------------------------------")
         console.log(serviceList)
 
         const appointnetToSave = this.appointmentRepository.create({
@@ -55,12 +59,14 @@ export class AppointmentService {
             employee: employeeToAssign,
             customer: customerToBook,
             services: serviceList,
+            appointmentDate: services.appointmentDate,
+            startTime: services.startTime,
+            estimatedEndTime: services.estimatedEndTime
         })
 
         const savedAppointment = await this.appointmentRepository.save(appointnetToSave)
         console.log("this is the appointment created-------------------")
-        console.log(savedAppointment
-            )
+        //console.log(savedAppointment)
         salonToUpdate.appointments.push(savedAppointment)
         employeeToAssign.appointments.push(savedAppointment)
         customerToBook.appointments.push(savedAppointment)
@@ -69,6 +75,9 @@ export class AppointmentService {
         this.employeeRepository.save(employeeToAssign)
         this.customerRepository.save(customerToBook)
 
+        console.log("the time is: " + savedAppointment.startTime + " " + typeof savedAppointment.startTime)
+        console.log("the date is: " + savedAppointment.appointmentDate + " " + typeof savedAppointment.appointmentDate)
+
         return savedAppointment
     }
 
@@ -76,7 +85,34 @@ export class AppointmentService {
         return  this.appointmentRepository.update( idToUpdate, {...updateDetails});
 
     }
-    
+    async updateAppointmentServices(idToUpdate: number, updateDetails: updateAppointmentServicesDto){
+        console.log('appointment service')
+        const appointmentToUpdate = await this.appointmentRepository.findOne({relations: ['services'], where: {id: idToUpdate}})
+        const serviceList = await this.serviceRepository.find( {where: {id: In( updateDetails.services  ) } } )
+        console.log(appointmentToUpdate)
+        console.log(serviceList)
+        
+        appointmentToUpdate.services = serviceList;
+
+        return this.appointmentRepository.save(appointmentToUpdate)
+    }
+    async updateAppointmentStatus(idToUpdate: number, updateDetails: updateAppointmentStatusDto){
+        console.log('appointment status')
+        const appointmentToUpdate = await this.appointmentRepository.findOne({ relations: ['employee'], where: {id: idToUpdate} })
+        console.log(updateDetails.approvalStatus);
+        if (updateDetails.approvalStatus == ApprovalStatusEnum.COMPLETED) {
+            const employeeOfAppointment = await this.employeeRepository.findOne({where: {id: appointmentToUpdate.employee.id}})
+            console.log("appointment completed updating employee appointment count")
+            employeeOfAppointment.pastAppointment += 1
+            console.log('employee\'s new number of appointments: ' + employeeOfAppointment.pastAppointment)
+            this.employeeRepository.save(employeeOfAppointment);
+        }
+        appointmentToUpdate.approvalStatus = updateDetails.approvalStatus
+        console.log(appointmentToUpdate)
+        return this.appointmentRepository.save(appointmentToUpdate)        
+        
+    }
+
     deleteAppointment(idToDelete: number){
         return this.appointmentRepository.delete( idToDelete)
 

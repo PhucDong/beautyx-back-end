@@ -1,13 +1,12 @@
-import { IsNotEmpty, IsNumber } from "class-validator"
+import { IsNotEmpty, IsNumber, Matches } from "class-validator"
 
 export class createServiceDto{
     @IsNotEmpty()
     serviceName: string
 
-    @IsNotEmpty()
+    @Matches(/^([0-1]?[0-9]|2?[0-4]):([0-5]?[0-9]):([0-5]?[0-9])$/)
     duration: Date
 
-    @IsNotEmpty()
     @IsNumber()
     price: number
 
@@ -16,8 +15,10 @@ export class createServiceDto{
 
 }
 export class updateServiceDto{
-    serviceName: string
 
+    serviceName: string
+    
+    @Matches(/^([0-1]?[0-9]|2?[0-4]):([0-5]?[0-9]):([0-5]?[0-9])$/)
     duration: Date
 
     @IsNumber()

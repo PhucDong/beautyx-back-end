@@ -6,11 +6,9 @@ export class createInventoryDto {
     @IsNotEmpty()
     inventoryName: string
 
-    @IsNotEmpty()
     @IsNumber()
     inventoryQuantity: number
 
-    @IsNotEmpty()
     @IsNumber()
     inventoryVolume: number
 

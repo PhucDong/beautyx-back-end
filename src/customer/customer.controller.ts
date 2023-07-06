@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, UsePipes, ValidationPipe } from '@nestjs/common';
 import { CustomerService } from './customer.service';
 import { createCustomerDto, updateCustomerDto, updateFavoriteSalonDto } from 'src/DTOs/CustomerDto';
 
@@ -15,18 +15,30 @@ export class CustomerController {
     getCustomer(@Param('id', ParseIntPipe) idToFind: number){
         return this.customerService.getCustomer(idToFind);
     }
-
+    @Get('id/:id/favorites')
+    getCustomerFavorites(@Param('id', ParseIntPipe) idToFind: number){
+        return this.customerService.getCustomerFavorites(idToFind);
+    }
+    @Get('id/:id/appointments')
+    getCustomerAppointments(@Param('id', ParseIntPipe) idToFind: number){
+        return this.customerService.getCustomerAppointments(idToFind);
+    }
+    
     @Post('create')
+    @UsePipes(ValidationPipe)
     createCustomer(@Body() newCustomer: createCustomerDto){
         return this.customerService.createCustomer(newCustomer)
     }
     
     @Put('update/id/:id')
+    @UsePipes(ValidationPipe)
     async updateCustomer(@Param('id', ParseIntPipe) idToUpdate: number, @Body() updateDetails: updateCustomerDto){
         const updatedCustomer = await this.customerService.updateCustomer(idToUpdate, updateDetails)
         return updatedCustomer;
     }
+    
     @Put('id/:customerId/assign/salon/id/:salonId')
+    @UsePipes(ValidationPipe)
     async assignSalonToCustomer(@Param() params: any, @Body() updateDetails: updateFavoriteSalonDto){
         const updatedCustomer = await this.customerService.assignSalonToCustomer(params.customerId, params.salonId, updateDetails)
         return updatedCustomer;

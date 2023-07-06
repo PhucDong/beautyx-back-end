@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, UsePipes, ValidationPipe } from '@nestjs/common';
 import { ReviewService } from './review.service';
 import { createInventoryDto, updateInventoryDto } from 'src/DTOs/InventoyDto';
 import { createReviewDto, updateReviewDto } from 'src/DTOs/ReviewDto';
@@ -19,11 +19,13 @@ export class ReviewController {
     }
 
     @Post('create/customer/id/:customerId/appointment/id/:appointmentId')
+    @UsePipes(ValidationPipe)
     createReview(@Param() params: any, @Body() newReview: createReviewDto){
         return this.reviewService.createReview(params.customerId, params.appointmentId, newReview)
     }
     
     @Put('update/id/:id')
+    @UsePipes(ValidationPipe)
     async updateReview(@Param('id', ParseIntPipe) idToUpdate: number, @Body() updateDetails: updateReviewDto){
         const updatedInventory = await this.reviewService.updateReview(idToUpdate, updateDetails)
         return updatedInventory;

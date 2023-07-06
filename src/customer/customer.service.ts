@@ -14,12 +14,17 @@ export class CustomerService {
 
     
     getCustomers(){
-        return this.customerRepository.find({relations: ['salons']});
+        return this.customerRepository.find();
     }
     getCustomer(idToFind: number){
         return this.customerRepository.findOneBy({id: idToFind});
     }
-    
+    getCustomerFavorites(idToFind: number){
+        return this.customerRepository.findOne({relations: ['salons'], where: {id: idToFind}});
+    }
+    getCustomerAppointments(idToFind: number){
+        return this.customerRepository.findOne({relations: ['appointments'], where: {id: idToFind}});
+    }
     createCustomer(newCustomer: createCustomerDto){
         const customerToSave = this.customerRepository.create({...newCustomer});
         return this.customerRepository.save(customerToSave)
@@ -46,11 +51,20 @@ export class CustomerService {
             const indexToRemove = customerToUpdate.salons.indexOf(salon)
             customerToUpdate.salons.splice(indexToRemove, 1)
         } else if (updateDetails.operation == "add"){
-         
-            customerToUpdate.salons.push(salon)
+            for (var i = 0; i < customerToUpdate.salons.length; i++) {
+                if (customerToUpdate.salons[i].id == salon.id) {
+                    throw new HttpException("the salon is already inside of the favorite list", HttpStatus.BAD_REQUEST)
+                    
+                } else {
+                    customerToUpdate.salons.push(salon)
+                    return this.customerRepository.save(customerToUpdate)
+                }
+            }
+
+            
         }
 
-        return this.customerRepository.save(customerToUpdate)
+        
     
     }
     deleteCustomer(idToDelete: number){

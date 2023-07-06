@@ -1,4 +1,4 @@
-import { IsNotEmpty } from "class-validator"
+import { IsNotEmpty, Matches } from "class-validator"
 
 export class createSalonDto {
 
@@ -8,10 +8,10 @@ export class createSalonDto {
     @IsNotEmpty()
     salonAddress: string
 
-    @IsNotEmpty()
+    @Matches(/^([0-1]?[0-9]|2?[0-4]):([0-5]?[0-9]):([0-5]?[0-9])$/)
     startTime: Date
     
-    @IsNotEmpty()
+    @Matches(/^([0-1]?[0-9]|2?[0-4]):([0-5]?[0-9]):([0-5]?[0-9])$/)
     endtime: Date
 
 
@@ -23,8 +23,10 @@ export class updateSalonDto {
 
     salonAddress: string
     
+    @Matches(/^([0-1]?[0-9]|2?[0-4]):([0-5]?[0-9]):([0-5]?[0-9])$/)
     startTime: Date
     
-    endtime: Date
+    @Matches(/^([0-1]?[0-9]|2?[0-4]):([0-5]?[0-9]):([0-5]?[0-9])$/)
+    endTime: Date
 
 }

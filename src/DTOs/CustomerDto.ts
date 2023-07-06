@@ -1,22 +1,22 @@
-import { IsEmail, IsEnum, IsNotEmpty, IsNumber } from "class-validator"
+import { IsDateString, IsEmail, IsEmpty, IsEnum, IsNotEmpty, IsNumber, IsNumberString } from "class-validator"
 import { GenderEnum } from "src/TypeOrms/Profile"
 import { SalonEntity } from "src/TypeOrms/SalonEntity"
 
 export class createCustomerDto{
     //user section
     @IsNotEmpty()
-    fisrtname: string
+    firstname: string
+
     @IsNotEmpty()
     lastname: string
 
-    @IsNotEmpty()
     @IsEmail()
     email: string
 
-    @IsNotEmpty()
+    @IsNumberString()
     phone: string
 
-    @IsNotEmpty()
+    @IsDateString()
     dateOfBirth: Date
 
     @IsNotEmpty()
@@ -25,7 +25,6 @@ export class createCustomerDto{
     @IsNotEmpty()
     address: string
     
-    @IsNotEmpty()
     @IsEnum(GenderEnum)
     gender: GenderEnum
 
@@ -38,14 +37,17 @@ export class createCustomerDto{
 export class updateCustomerDto{
     //user section
     fisrtname: string
+
     lastname: string
 
     @IsEmail()
     email: string
 
+    @IsNumberString()
     phone: string
 
-    DateOfBirth: Date
+    @IsDateString()
+    dateOfBirth: Date
 
     city: string
 
@@ -55,10 +57,11 @@ export class updateCustomerDto{
     gender: GenderEnum
 
     //customer section
-
+    
     lastActivity: Date
 
-    @IsNumber()
+    // @IsNumber()
+    // @IsEmpty()
     serviceUsageTime: number
  
     salon: SalonEntity[]
