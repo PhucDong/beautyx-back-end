@@ -17,22 +17,29 @@ export class EmployeeService {
     getEmployees(){
         return this.employeeRepository.find({relations: []});
     }
-    getEmployee(idToFind: number){
-       return this.employeeRepository.findOneBy({id: idToFind});
+    async getEmployee(idToFind: number){
+        const employee = await this.employeeRepository.findOneBy({id: idToFind});
+        if (!employee) throw new HttpException('the employee with the given id cannot be found', HttpStatus.NOT_FOUND)
+        return employee
     }
     getEmployeeAppointments(idToFind: number){
         return this.employeeRepository.findOne({relations: ['appointments'], where: {id: idToFind}});
      }
  
     async getEmployeesAvailable(salonId: number, appointmentTime: getEmployeesAvailableDto){
+
         const salonToFind = await this.salonRepository.findOne({where: {id: salonId}})
+        if (!salonToFind) throw new HttpException('the salon with the given id cannot be found to get it\'s list of available employee', HttpStatus.NOT_FOUND)
+
         const employees = await this.employeeRepository.find({
             relations: ['salon', 'appointments'], 
             where: {salon: salonToFind}
         })
         console.log('list of employees belonging to the salon')
         console.log(employees)
-
+        if (employees.length == 0) {
+            throw new HttpException('the salon has no employee assigned to it', HttpStatus.NO_CONTENT)
+        }
         let availableEmployees: EmployeeEntity[] = [];
         
         for (var i = 0; i < employees.length; i++){
@@ -45,24 +52,24 @@ export class EmployeeService {
                     const dateToCheck = new Date(appointmentTime.appointmentDate)
                     const dateAssigned = employeeChecking.appointments[j].appointmentDate
 
-                    console.log('date of appointment assigned: ' + dateAssigned)
-                    console.log('date of appointment to check: ' + dateToCheck)
+                    // console.log('date of appointment assigned: ' + dateAssigned)
+                    // console.log('date of appointment to check: ' + dateToCheck)
                  
                     if(dateAssigned.getFullYear() != dateToCheck.getFullYear() 
                     || dateAssigned.getMonth() != dateToCheck.getMonth() 
                     || dateAssigned.getDate() != dateToCheck.getDate() 
                     ){
-                        console.log('appointment not on the same date-------------------')
+                        // console.log('appointment not on the same date-------------------')
                         continue
                     } else {
 
-                        console.log('time of appointment assigned: ' + employeeChecking.appointments[j].startTime + ' to ' + employeeChecking.appointments[j].estimatedEndTime)
-                        console.log('time of appointment to check: ' + appointmentTime.startTime + ' to ' + appointmentTime.estimatedEndTime)
+                        // console.log('time of appointment assigned: ' + employeeChecking.appointments[j].startTime + ' to ' + employeeChecking.appointments[j].estimatedEndTime)
+                        // console.log('time of appointment to check: ' + appointmentTime.startTime + ' to ' + appointmentTime.estimatedEndTime)
 
                         if ( (appointmentTime.startTime >= employeeChecking.appointments[j].startTime && appointmentTime.startTime <= employeeChecking.appointments[j].estimatedEndTime)
                             || (appointmentTime.estimatedEndTime >= employeeChecking.appointments[j].startTime && appointmentTime.estimatedEndTime <= employeeChecking.appointments[j].estimatedEndTime) 
                             || (appointmentTime.startTime <= employeeChecking.appointments[j].startTime && appointmentTime.estimatedEndTime >= employeeChecking.appointments[j].estimatedEndTime)) {
-                                console.log("overlapping appointment found---------------------")
+                                // console.log("overlapping appointment found---------------------")
                                 availability = false;
                                 break;
                             }
@@ -71,7 +78,7 @@ export class EmployeeService {
 
             }
             if (availability == true){
-                console.log('current employee added to available list')
+                // console.log('current employee added to available list')
                 availableEmployees.push(employeeChecking)
             }
             
@@ -126,6 +133,8 @@ export class EmployeeService {
     }
     async updateEmployeeWorkDay(idToUpdate: number, updateDetails: updateEmployeeWorkDayDto){
         const employeeToUpdate = await this.employeeRepository.findOne({where: {id: idToUpdate}})
+        if (!employeeToUpdate) throw new HttpException('the employee with the given id cannot be found to update the workday', HttpStatus.NOT_FOUND)
+        
         const indexToFind = employeeToUpdate.workDays.indexOf(updateDetails.workDays)
         if (indexToFind == -1){
             if (employeeToUpdate.workDays == ''){

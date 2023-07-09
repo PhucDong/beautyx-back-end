@@ -3,7 +3,7 @@ import { ApprovalStatusEnum } from "src/TypeOrms/AppointmentEntity";
 import { ServiceEntity } from "src/TypeOrms/ServiceEntity";
 
 export class createAppointmentDto {
-    @IsNotEmpty()
+
     @IsDateString()
     appointmentDate: Date
 
@@ -13,7 +13,6 @@ export class createAppointmentDto {
     @IsNotEmpty()
     estimatedEndTime: Date
 
-    @IsNotEmpty()
     @IsArray()
     services: number[]
 }

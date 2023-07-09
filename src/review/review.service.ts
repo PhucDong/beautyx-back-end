@@ -19,10 +19,11 @@ export class ReviewService {
     getReviews(){
         return this.reviewRepository.find();
     }
-    getReview(idToFind: number){
-       return this.reviewRepository.findOneBy({id: idToFind});
+    async getReview(idToFind: number){
+        const review = await this.reviewRepository.findOneBy({id: idToFind});
+        if (!review) throw new HttpException('reiew with the given id cannot be found', HttpStatus.NOT_FOUND)
+        return review
     }
-
     async createReview(customerId: number, appointmentId: number, newReview: createReviewDto){
         const appointmentToUpdate = await this.appointmentRepository.findOne({
             where: { id: appointmentId },
@@ -44,6 +45,7 @@ export class ReviewService {
 
         const updatedAppointment = await this.appointmentRepository.save(appointmentToUpdate)
         const updatedCustomer = await this.customerRepository.save(customerToReview)
+        
         return savedReview
     }
 

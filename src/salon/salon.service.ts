@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { createSalonDto, updateSalonDto } from 'src/DTOs/SalonDto';
 import { SalonEntity } from 'src/TypeOrms/SalonEntity';
@@ -14,8 +14,10 @@ export class SalonService {
     getSalons(){
         return this.salonRepository.find({relations: []});
     }
-    getSalon(idToFind: number){
-       return this.salonRepository.findOneBy({id: idToFind});
+    async getSalon(idToFind: number){
+        const salon = await this.salonRepository.findOneBy({id: idToFind});
+        if (!salon) throw new HttpException('the salon with the given id cannot be found', HttpStatus.NOT_FOUND)
+        return salon
     }
     getSalonServiceCategories(idToFind: number){
         return this.salonRepository.findOne({relations: ['serviceCategories'], where: {id: idToFind}});
