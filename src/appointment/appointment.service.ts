@@ -21,7 +21,7 @@ export class AppointmentService {
 
     
     getAppointments(){
-        return this.appointmentRepository.find({relations: []});
+        return this.appointmentRepository.find({relations: ['review']});
     }
     async getAppointment(idToFind: number){
         const appointment = await this.appointmentRepository.findOneBy({id: idToFind});
@@ -105,6 +105,7 @@ export class AppointmentService {
     async updateAppointmentStatus(idToUpdate: number, updateDetails: updateAppointmentStatusDto){
         const appointmentToUpdate = await this.appointmentRepository.findOne({ relations: ['employee'], where: {id: idToUpdate} })
         if (!appointmentToUpdate) throw new HttpException('the appointment with the given id cannot be found to update it\' status', HttpStatus.NOT_FOUND)
+
         if(appointmentToUpdate.approvalStatus == ApprovalStatusEnum.COMPLETED) throw new HttpException('appointment is already completed cannot update status anymore', HttpStatus.BAD_REQUEST)
         // console.log(updateDetails.approvalStatus);
         if (updateDetails.approvalStatus == ApprovalStatusEnum.COMPLETED) {
@@ -113,7 +114,8 @@ export class AppointmentService {
             employeeOfAppointment.pastAppointment += 1
             // console.log('employee\'s new number of appointments: ' + employeeOfAppointment.pastAppointment)
             this.employeeRepository.save(employeeOfAppointment);
-        }
+        } else if (appointmentToUpdate.approvalStatus != ApprovalStatusEnum.PENDING && updateDetails.approvalStatus == ApprovalStatusEnum.CANCELLED) throw new HttpException('appointment can only be cancelled when it is pending', HttpStatus.BAD_REQUEST)
+
         appointmentToUpdate.approvalStatus = updateDetails.approvalStatus
         console.log(appointmentToUpdate)
         return this.appointmentRepository.save(appointmentToUpdate)        

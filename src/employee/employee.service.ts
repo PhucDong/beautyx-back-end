@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { createEmployeeDto, getEmployeesAvailableDto, updateEmployeeDto, updateEmployeeWorkDayDto } from 'src/DTOs/EmployeeDto';
-import { AppointmentEntity, ApprovalStatusEnum } from 'src/TypeOrms/AppointmentEntity';
+import { ApprovalStatusEnum } from 'src/TypeOrms/AppointmentEntity';
 import { EmployeeEntity } from 'src/TypeOrms/EmployeeEntity';
 import { SalonEntity } from 'src/TypeOrms/SalonEntity';
 import { Repository } from 'typeorm';
@@ -15,15 +15,41 @@ export class EmployeeService {
 
     
     getEmployees(){
-        return this.employeeRepository.find({relations: []});
+        return this.employeeRepository.find({relations: ['appointments']});
     }
     async getEmployee(idToFind: number){
         const employee = await this.employeeRepository.findOneBy({id: idToFind});
         if (!employee) throw new HttpException('the employee with the given id cannot be found', HttpStatus.NOT_FOUND)
-        return employee
+        const workDaysList = employee.workDays.split(',')
+        var workDaysListToReturn = []
+        for (var i = 0; i < workDaysList.length; i++) {
+            var [dayStr, startTimeStr, endTimeStr] = workDaysList[i].split('-')
+            workDaysListToReturn.push({
+                workDay: dayStr,
+                startTime: startTimeStr,
+                endTime: endTimeStr
+            })
+        }
+        const employeeToReturn = {
+            firstname: employee.firstname,
+            lastname: employee.lastname,
+            email: employee.email,
+            phone: employee.phone,
+            dateOfBirth: employee.dateOfBirth,
+            city: employee.city,
+            address: employee.address,
+            gender: employee.gender,
+            job: employee.job,
+            workDays: workDaysListToReturn,
+            salary: employee.salary,
+            experience: employee.experience
+        }
+        return employeeToReturn
     }
-    getEmployeeAppointments(idToFind: number){
-        return this.employeeRepository.findOne({relations: ['appointments'], where: {id: idToFind}});
+    async getEmployeeAppointments(idToFind: number){
+        const employee = await this.employeeRepository.findOne({relations: ['appointments'], where: {id: idToFind}});
+        if (!employee) throw new HttpException('the employee with the given id cannot be found', HttpStatus.NOT_FOUND)
+        return employee.appointments
      }
  
     async getEmployeesAvailable(salonId: number, appointmentTime: getEmployeesAvailableDto){
@@ -33,10 +59,11 @@ export class EmployeeService {
 
         const employees = await this.employeeRepository.find({
             relations: ['salon', 'appointments'], 
-            where: {salon: salonToFind}
+            //where: {salon: salonToFind}
+            where: { salon: {id: salonToFind.id} }
         })
-        console.log('list of employees belonging to the salon')
-        console.log(employees)
+        // console.log('list of employees belonging to the salon')
+        // console.log(employees)
         if (employees.length == 0) {
             throw new HttpException('the salon has no employee assigned to it', HttpStatus.NO_CONTENT)
         }
@@ -134,18 +161,25 @@ export class EmployeeService {
     async updateEmployeeWorkDay(idToUpdate: number, updateDetails: updateEmployeeWorkDayDto){
         const employeeToUpdate = await this.employeeRepository.findOne({where: {id: idToUpdate}})
         if (!employeeToUpdate) throw new HttpException('the employee with the given id cannot be found to update the workday', HttpStatus.NOT_FOUND)
+
+        // var [day, startTime, endTime] = updateDetails.workDay.split('-')
+        // var timeFormat: RegExp = /^([0-1]?[0-9]|2?[0-4]):([0-5]?[0-9]):([0-5]?[0-9])$/;
+
+        // if (timeFormat.test(startTime) == false) throw new HttpException("the start time format is incorrect, please enter the time by this format: hh:mm:ss", HttpStatus.BAD_REQUEST)
+        // if (timeFormat.test(endTime) == false) throw new HttpException("the end time format is incorrect, please enter the time by this format: hh:mm:ss", HttpStatus.BAD_REQUEST)
         
-        const indexToFind = employeeToUpdate.workDays.indexOf(updateDetails.workDays)
+        const workDayStr = updateDetails.workDay + '-' + updateDetails.startTime + '-' + updateDetails.endTime
+        const indexToFind = employeeToUpdate.workDays.indexOf(updateDetails.workDay)
         if (indexToFind == -1){
             if (employeeToUpdate.workDays == ''){
-                employeeToUpdate.workDays = updateDetails.workDays
+                employeeToUpdate.workDays = workDayStr
             } else {
-                employeeToUpdate.workDays = employeeToUpdate.workDays + ',' + updateDetails.workDays
+                employeeToUpdate.workDays = employeeToUpdate.workDays + ',' + workDayStr
             }
         } else {
             const leftString = employeeToUpdate.workDays.substring(0, indexToFind);
-            const rightString = employeeToUpdate.workDays.substring(indexToFind + updateDetails.workDays.length + 1);
-            employeeToUpdate.workDays = leftString + rightString
+            const rightString = employeeToUpdate.workDays.substring(indexToFind + workDayStr.length + 1);
+            employeeToUpdate.workDays = leftString + workDayStr + ',' + rightString
             if (employeeToUpdate.workDays.charAt(employeeToUpdate.workDays.length - 1) == ','){
                 employeeToUpdate.workDays = employeeToUpdate.workDays.substring(0, employeeToUpdate.workDays.length - 1)
             }
@@ -154,6 +188,7 @@ export class EmployeeService {
         return this.employeeRepository.save(employeeToUpdate);
 
     }
+
     deleteEmployee(idToDelete: number){
         return this.employeeRepository.delete( idToDelete)
 

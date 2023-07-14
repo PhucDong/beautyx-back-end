@@ -11,18 +11,6 @@ export class EmployeeEntity extends Profile{
         nullable: false
     })
     job: string
-
-    @Column({
-        nullable: false,
-        type: 'time'
-    })
-    startTime: Date
-
-    @Column({
-        nullable: false,
-        type: 'time'
-    })
-    endTime: Date
     
     @Column()
     workDays: string

@@ -20,15 +20,14 @@ export class SalonEntity {
     @Column()
     salonAddress: string
     
-    @Column({
-        type: 'time'
-    })
-    startTime: Date
+    @Column()
+    workDays: string
 
-    @Column({
-        type: 'time'
-    })
-    endTime: Date
+    @Column()
+    highLights: string
+
+    @Column()
+    description: string
 
     @OneToMany(() => ServiceCategoryEntity, (serivceCategories) => serivceCategories.salon)
     serviceCategories: ServiceCategoryEntity[]

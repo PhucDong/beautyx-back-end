@@ -1,6 +1,6 @@
 import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, UsePipes, ValidationPipe } from '@nestjs/common';
 import { SalonService } from './salon.service';
-import { createSalonDto, updateSalonDto } from 'src/DTOs/SalonDto';
+import { createSalonDto, searchSalonDto, updateSalonDto, updateSalonHighLightsDto, updateSalonWorkDayDto } from 'src/DTOs/SalonDto';
 
 @Controller('salon')
 export class SalonController {
@@ -32,6 +32,11 @@ export class SalonController {
     getSalonEmployess(@Param('id', ParseIntPipe) idToFind: number){
         return this.salonService.getSalonEmployess(idToFind);
     }
+
+    @Get('search')
+    searchSalon(@Body() searchKey: searchSalonDto){
+        return this.salonService.searchSalon(searchKey);
+    }
     @Post('create')
     @UsePipes(ValidationPipe)
     createSalon(@Body() newSalon: createSalonDto){
@@ -43,6 +48,18 @@ export class SalonController {
     async updateSalon(@Param('id', ParseIntPipe) idToUpdate: number, @Body() updateDetails: updateSalonDto){
         const updatedSalon = await this.salonService.updateSalon(idToUpdate, updateDetails)
         return updatedSalon
+    }
+    
+    @Put('update/highlights/id/:id')
+    @UsePipes(ValidationPipe)
+    updateSalonHighLights(@Param('id', ParseIntPipe) idToUpdate: number, @Body() updateDetails: updateSalonHighLightsDto){
+        return this.salonService.updateSalonHighLights(idToUpdate, updateDetails)
+    }
+
+    @Put('update/workdays/id/:id')
+    @UsePipes(ValidationPipe)
+    updateSalonWorkDay(@Param('id', ParseIntPipe) idToUpdate: number, @Body() updateDetails: updateSalonWorkDayDto){
+        return this.salonService.updateSalonWorkDay(idToUpdate, updateDetails)
     }
 
     @Delete('delete/id/:id')

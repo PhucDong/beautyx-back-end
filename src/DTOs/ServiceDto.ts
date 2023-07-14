@@ -11,7 +11,7 @@ export class createServiceDto{
     price: number
 
     @IsNotEmpty()
-    describption: string
+    description: string
 
 }
 export class updateServiceDto{
