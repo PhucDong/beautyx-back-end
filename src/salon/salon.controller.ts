@@ -1,6 +1,6 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, UsePipes, ValidationPipe } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, Query, UsePipes, ValidationPipe } from '@nestjs/common';
 import { SalonService } from './salon.service';
-import { createSalonDto, searchSalonDto, updateSalonDto, updateSalonHighLightsDto, updateSalonWorkDayDto } from 'src/DTOs/SalonDto';
+import { createSalonDto, searchSalonDto, updateSalonDto, updateSalonHighLightsDto, updateSalonWorkDayDto, updateSalonWorkDayListDto } from 'src/DTOs/SalonDto';
 
 @Controller('salon')
 export class SalonController {
@@ -37,6 +37,10 @@ export class SalonController {
     searchSalon(@Body() searchKey: searchSalonDto){
         return this.salonService.searchSalon(searchKey);
     }
+    @Get('search/query')
+    searchSalonQuery(@Query('searchKey') searchKey: string){
+        return this.salonService.searchSalonQuery(searchKey);
+    }
     @Post('create')
     @UsePipes(ValidationPipe)
     createSalon(@Body() newSalon: createSalonDto){
@@ -61,7 +65,13 @@ export class SalonController {
     updateSalonWorkDay(@Param('id', ParseIntPipe) idToUpdate: number, @Body() updateDetails: updateSalonWorkDayDto){
         return this.salonService.updateSalonWorkDay(idToUpdate, updateDetails)
     }
-
+    @Put('update/workdays/list/id/:id')
+    @UsePipes(ValidationPipe)
+    updateSalonWorkDayList(@Param('id', ParseIntPipe) idToUpdate: number, @Body() updateDetails: updateSalonWorkDayListDto){
+        console.log('update a list of workdays')
+        console.log(updateDetails)
+        return this.salonService.updateSalonWorkDayList(idToUpdate, updateDetails)
+    }
     @Delete('delete/id/:id')
     deleteSalon(@Param('id', ParseIntPipe) idToDelete: number,){
         return this.salonService.deleteSalon(idToDelete)

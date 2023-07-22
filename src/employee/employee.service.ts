@@ -1,6 +1,6 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { createEmployeeDto, getEmployeesAvailableDto, updateEmployeeDto, updateEmployeeWorkDayDto } from 'src/DTOs/EmployeeDto';
+import { createEmployeeDto, getEmployeesAvailableDto, updateEmployeeDto, updateEmployeeWorkDayDto, updateEmployeeWorkDayListDto } from 'src/DTOs/EmployeeDto';
 import { ApprovalStatusEnum } from 'src/TypeOrms/AppointmentEntity';
 import { EmployeeEntity } from 'src/TypeOrms/EmployeeEntity';
 import { SalonEntity } from 'src/TypeOrms/SalonEntity';
@@ -145,8 +145,17 @@ export class EmployeeService {
             relations: { employees: true },
         })
         if (!salonToUpdate) throw new HttpException('salon cannot be found to add new employee', HttpStatus.NOT_FOUND)
-     
-        const employeeToSave = this.employeeRepository.create({...newEmployee});
+
+        var workDays = ''
+        for (var i = 0; i < newEmployee.workDays.length; i++){
+            const currentWorkDay = newEmployee.workDays[i]
+            workDays += currentWorkDay.workDay + '-' + currentWorkDay.startTime + '-' +currentWorkDay.endTime + ','
+        }
+
+        if (workDays.charAt(workDays.length - 1) == ','){
+            workDays = workDays.substring(0, workDays.length - 1)
+        }
+        const employeeToSave = this.employeeRepository.create({...newEmployee, workDays});
         const savedEmployee = await this.employeeRepository.save(employeeToSave)
        
         salonToUpdate.employees.push(savedEmployee)
@@ -188,7 +197,40 @@ export class EmployeeService {
         return this.employeeRepository.save(employeeToUpdate);
 
     }
+    async updateEmployeeWorkDayList(idToUpdate: number, updateDetails: updateEmployeeWorkDayListDto){
+        const employeeToUpdate = await this.employeeRepository.findOne({where: {id: idToUpdate}})
+        if (!employeeToUpdate) throw new HttpException('the employee with the given id cannot be found to update the workday', HttpStatus.NOT_FOUND)
 
+        // var [day, startTime, endTime] = updateDetails.workDay.split('-')
+        // var timeFormat: RegExp = /^([0-1]?[0-9]|2?[0-4]):([0-5]?[0-9]):([0-5]?[0-9])$/;
+
+        // if (timeFormat.test(startTime) == false) throw new HttpException("the start time format is incorrect, please enter the time by this format: hh:mm:ss", HttpStatus.BAD_REQUEST)
+        // if (timeFormat.test(endTime) == false) throw new HttpException("the end time format is incorrect, please enter the time by this format: hh:mm:ss", HttpStatus.BAD_REQUEST)
+        for (var i = 0; i < updateDetails.workDayList.length; i++){
+            const currentWorkDay = updateDetails.workDayList[i]
+            const workDayStr = currentWorkDay.workDay + '-' + currentWorkDay.startTime + '-' + currentWorkDay.endTime
+            const indexToFind = employeeToUpdate.workDays.indexOf(currentWorkDay.workDay)
+            if (indexToFind == -1){
+                if (employeeToUpdate.workDays == ''){
+                    employeeToUpdate.workDays = workDayStr
+                } else {
+                    employeeToUpdate.workDays = employeeToUpdate.workDays + ',' + workDayStr
+                }
+            } else {
+                const leftString = employeeToUpdate.workDays.substring(0, indexToFind);
+                const rightString = employeeToUpdate.workDays.substring(indexToFind + workDayStr.length + 1);
+                employeeToUpdate.workDays = leftString + workDayStr + ',' + rightString
+                if (employeeToUpdate.workDays.charAt(employeeToUpdate.workDays.length - 1) == ','){
+                    employeeToUpdate.workDays = employeeToUpdate.workDays.substring(0, employeeToUpdate.workDays.length - 1)
+                }
+    
+            }
+        }
+
+        
+        return this.employeeRepository.save(employeeToUpdate);
+
+    }
     deleteEmployee(idToDelete: number){
         return this.employeeRepository.delete( idToDelete)
 

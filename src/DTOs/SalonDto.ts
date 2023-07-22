@@ -9,7 +9,10 @@ export class createSalonDto {
     @IsNotEmpty()
     salonAddress: string
 
-    
+    @ValidateNested()
+    @Type(() => updateSalonWorkDayDto)
+    workDays: updateSalonWorkDayDto[]
+
     @IsNotEmpty()
     highLights: string
 
@@ -49,7 +52,6 @@ export class updateSalonWorkDayDto {
 }
 export class updateSalonWorkDayListDto {
 
-    @IsNotEmptyObject()
     @ValidateNested()
     @Type(() => updateSalonWorkDayDto)
     workDayList: updateSalonWorkDayDto[]

@@ -33,8 +33,9 @@ export class createEmployeeDto{
     @IsNotEmpty()
     job: string
 
-    @IsNotEmpty()
-    workDays: string
+    @ValidateNested()
+    @Type(() => updateEmployeeWorkDayDto)
+    workDays: updateEmployeeWorkDayDto[]
 
     @IsNumber()
     salary: number
@@ -99,7 +100,6 @@ export class updateEmployeeWorkDayDto {
 }
 export class updateEmployeeWorkDayListDto {
 
-    @IsNotEmptyObject()
     @ValidateNested()
     @Type(() => updateEmployeeWorkDayDto)
     workDayList: updateEmployeeWorkDayDto[]
