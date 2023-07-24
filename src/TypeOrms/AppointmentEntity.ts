@@ -9,8 +9,7 @@ export enum ApprovalStatusEnum {
     APPROVED = 'approved',
     DENIED = 'denied',
     PENDING = 'pending',
-    COMPLETED = 'completed',
-    CANCELLED = 'cancelled'
+    COMPLETED = 'completed'
   }
 
 @Entity()
@@ -59,7 +58,7 @@ export class AppointmentEntity {
     @JoinTable()
     services: ServiceEntity[]
 
-    @OneToOne(() => ReviewEntity, (review) => review.appointment)
+    @OneToOne(() => ReviewEntity)
     @JoinColumn()
     review: ReviewEntity
   

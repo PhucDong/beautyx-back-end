@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, UsePipes, ValidationPipe } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put } from '@nestjs/common';
 import { AppointmentService } from './appointment.service';
 import { createAppointmentDto, updateAppointmentDto, updateAppointmentServicesDto, updateAppointmentStatusDto } from 'src/DTOs/AppointmentDto';
 
@@ -22,25 +22,21 @@ export class AppointmentController {
     }
 
     @Post('create/salon/id/:salonId/employee/id/:employeeId/customer/id/:customerId')
-    @UsePipes(ValidationPipe)
     createAppointment(@Param() params: any, @Body() services: createAppointmentDto){
         return this.appointmentService.createAppointment(params.salonId, params.employeeId, params.customerId, services)
     }
     
     @Put('update/id/:id')
-    @UsePipes(ValidationPipe)
     async updateAppointment(@Param('id', ParseIntPipe) idToUpdate: number, @Body() updateDetails: updateAppointmentDto){
         const updatedAppointment = await this.appointmentService.updateAppointment(idToUpdate, updateDetails)
         return updatedAppointment;
     }
     @Put('update/services/id/:id')
-    @UsePipes(ValidationPipe)
     async updateAppointmentServices(@Param('id', ParseIntPipe) idToUpdate: number, @Body() updateDetails: updateAppointmentServicesDto){
         const updatedAppointmentSerivce = await this.appointmentService.updateAppointmentServices(idToUpdate, updateDetails)
         return updatedAppointmentSerivce;
     }
     @Put('update/status/id/:id')
-    @UsePipes(ValidationPipe)
     async updateAppointmentStatus(@Param('id', ParseIntPipe) idToUpdate: number, @Body() updateDetails: updateAppointmentStatusDto){
         const updatedStatus = await this.appointmentService.updateAppointmentStatus(idToUpdate, updateDetails)
         return updatedStatus;

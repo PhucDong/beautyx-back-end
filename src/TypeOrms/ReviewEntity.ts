@@ -19,8 +19,7 @@ export class ReviewEntity{
     @ManyToOne(() => CustomerEntity, (customer) => customer.reviews)
     customer: CustomerEntity
 
-    @OneToOne(() => AppointmentEntity, (appointment) => appointment.review)
-    appointment: AppointmentEntity
+    
     
 
 }

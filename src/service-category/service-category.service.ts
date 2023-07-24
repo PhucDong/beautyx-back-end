@@ -16,10 +16,8 @@ export class ServiceCategoryService {
     getServiceCategories(){
         return this.serviceCategoryRepository.find({relations: ['services']});
     }
-    async getServiceCategory(idToFind: number){
-        const serviceCategory = await this.serviceCategoryRepository.findOneBy({id: idToFind});
-        if (!serviceCategory) throw new HttpException('the service category with the given id cannot be found', HttpStatus.NOT_FOUND)
-        return serviceCategory
+    getServiceCategory(idToFind: number){
+       return this.serviceCategoryRepository.findOneBy({id: idToFind});
     }
     getServiceCategoryServices(idToFind: number){
         return this.serviceCategoryRepository.findOne({relations: ['services'], where: {id: idToFind}});

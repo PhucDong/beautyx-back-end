@@ -15,10 +15,8 @@ export class ManagerService {
     getManagers(){
         return this.managerRepository.find();
     }
-    async getManager(idToFind: number){
-        const manager = await this.managerRepository.findOneBy({id: idToFind})
-        if (!manager) throw new HttpException('manager with the given id cannot be found', HttpStatus.NOT_FOUND)
-        return manager
+    getManager(idToFind: number){
+       return this.managerRepository.findOneBy({id: idToFind});
     }
 
     async createManager(salonId: number, newManager: createManagerDto){
@@ -27,14 +25,14 @@ export class ManagerService {
         if (!salonToUpdate) throw new HttpException('salon cannot be found to add new employee', HttpStatus.NOT_FOUND)
         
         const managerToSave = this.managerRepository.create({...newManager});
-        // console.log('this is the manager-------------created');
-        // console.log(managerToSave)
+        console.log('this is the manager-------------created');
+        console.log(managerToSave)
         const savedManager = await this.managerRepository.save(managerToSave)
        
         salonToUpdate.manager = savedManager
         const updatedSalon = await this.salonRepository.save(salonToUpdate)
         console.log('this is the updated salon with new manager')
-        // console.log(updatedSalon)
+        console.log(updatedSalon)
 
         return savedManager
     }

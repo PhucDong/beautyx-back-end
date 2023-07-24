@@ -21,12 +21,10 @@ export class AppointmentService {
 
     
     getAppointments(){
-        return this.appointmentRepository.find({relations: ['review']});
+        return this.appointmentRepository.find({relations: []});
     }
-    async getAppointment(idToFind: number){
-        const appointment = await this.appointmentRepository.findOneBy({id: idToFind});
-        if (!appointment) throw new HttpException('the appointment with the given id cannot be found', HttpStatus.NOT_FOUND)
-        else return appointment
+    getAppointment(idToFind: number){
+       return this.appointmentRepository.findOneBy({id: idToFind});
     }
     getAppointmentDetails(idToFind: number){
         return this.appointmentRepository.findOne({relations: ['services', 'review'], where: {id: idToFind}});
@@ -53,10 +51,8 @@ export class AppointmentService {
 
     
         const serviceList = await this.serviceRepository.find( {where: {id: In( services.services  ) } } )
-        // console.log("this is the list of service the customer requested ------------------------------------")
-        // console.log(serviceList)
-        
-        if ( serviceList.length == 0) throw new HttpException('error: there are no service id in the service list', HttpStatus.BAD_REQUEST)
+        console.log("this is the list of service the customer requested ------------------------------------")
+        console.log(serviceList)
 
         const appointnetToSave = this.appointmentRepository.create({
             salon: salonToUpdate,
@@ -69,7 +65,7 @@ export class AppointmentService {
         })
 
         const savedAppointment = await this.appointmentRepository.save(appointnetToSave)
-        //console.log("this is the appointment created-------------------")
+        console.log("this is the appointment created-------------------")
         //console.log(savedAppointment)
         salonToUpdate.appointments.push(savedAppointment)
         employeeToAssign.appointments.push(savedAppointment)
@@ -79,8 +75,8 @@ export class AppointmentService {
         this.employeeRepository.save(employeeToAssign)
         this.customerRepository.save(customerToBook)
 
-        // console.log("the time is: " + savedAppointment.startTime + " " + typeof savedAppointment.startTime)
-        // console.log("the date is: " + savedAppointment.appointmentDate + " " + typeof savedAppointment.appointmentDate)
+        console.log("the time is: " + savedAppointment.startTime + " " + typeof savedAppointment.startTime)
+        console.log("the date is: " + savedAppointment.appointmentDate + " " + typeof savedAppointment.appointmentDate)
 
         return savedAppointment
     }
@@ -90,32 +86,27 @@ export class AppointmentService {
 
     }
     async updateAppointmentServices(idToUpdate: number, updateDetails: updateAppointmentServicesDto){
+        console.log('appointment service')
         const appointmentToUpdate = await this.appointmentRepository.findOne({relations: ['services'], where: {id: idToUpdate}})
-        if (!appointmentToUpdate) throw new HttpException('the appointment with the given id cannot be found to update the service list', HttpStatus.NOT_FOUND)
-        
         const serviceList = await this.serviceRepository.find( {where: {id: In( updateDetails.services  ) } } )
-        if ( serviceList.length == 0) throw new HttpException('error: there are no service id in the service list', HttpStatus.BAD_REQUEST)
-
-        // console.log(appointmentToUpdate)
-        // console.log(serviceList)
+        console.log(appointmentToUpdate)
+        console.log(serviceList)
+        
         appointmentToUpdate.services = serviceList;
 
         return this.appointmentRepository.save(appointmentToUpdate)
     }
     async updateAppointmentStatus(idToUpdate: number, updateDetails: updateAppointmentStatusDto){
+        console.log('appointment status')
         const appointmentToUpdate = await this.appointmentRepository.findOne({ relations: ['employee'], where: {id: idToUpdate} })
-        if (!appointmentToUpdate) throw new HttpException('the appointment with the given id cannot be found to update it\' status', HttpStatus.NOT_FOUND)
-
-        if(appointmentToUpdate.approvalStatus == ApprovalStatusEnum.COMPLETED) throw new HttpException('appointment is already completed cannot update status anymore', HttpStatus.BAD_REQUEST)
-        // console.log(updateDetails.approvalStatus);
+        console.log(updateDetails.approvalStatus);
         if (updateDetails.approvalStatus == ApprovalStatusEnum.COMPLETED) {
             const employeeOfAppointment = await this.employeeRepository.findOne({where: {id: appointmentToUpdate.employee.id}})
-            // console.log("appointment completed updating employee appointment count")
+            console.log("appointment completed updating employee appointment count")
             employeeOfAppointment.pastAppointment += 1
-            // console.log('employee\'s new number of appointments: ' + employeeOfAppointment.pastAppointment)
+            console.log('employee\'s new number of appointments: ' + employeeOfAppointment.pastAppointment)
             this.employeeRepository.save(employeeOfAppointment);
-        } else if (appointmentToUpdate.approvalStatus != ApprovalStatusEnum.PENDING && updateDetails.approvalStatus == ApprovalStatusEnum.CANCELLED) throw new HttpException('appointment can only be cancelled when it is pending', HttpStatus.BAD_REQUEST)
-
+        }
         appointmentToUpdate.approvalStatus = updateDetails.approvalStatus
         console.log(appointmentToUpdate)
         return this.appointmentRepository.save(appointmentToUpdate)        

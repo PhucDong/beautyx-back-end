@@ -16,10 +16,7 @@ export class CustomerService {
     getCustomers(){
         return this.customerRepository.find();
     }
-    async getCustomer(idToFind: number){
-        const customer = await this.customerRepository.findOneBy({id: idToFind})
-        if (!customer) throw new HttpException('customer with the given id cannot be found', HttpStatus.NOT_FOUND)
-        
+    getCustomer(idToFind: number){
         return this.customerRepository.findOneBy({id: idToFind});
     }
     getCustomerFavorites(idToFind: number){
@@ -46,12 +43,11 @@ export class CustomerService {
         if (!customerToUpdate) throw new HttpException('customer cannot be found to update favorite salons', HttpStatus.NOT_FOUND)
         
         const salon = await this.salonRepository.findOneBy({id: salonId})
-        if (!salon) throw new HttpException('salon with the given id cannot be found to add to customer\'s list of favorite salons', HttpStatus.NOT_FOUND)
 
-        // console.log("the operation is: " + updateDetails.operation)
+        console.log("the operation is: " + updateDetails.operation)
 
         if (updateDetails.operation == 'remove') {
-            // console.log("removing favorite salon from list")
+            console.log("removing favorite salon from list")
             const indexToRemove = customerToUpdate.salons.indexOf(salon)
             customerToUpdate.salons.splice(indexToRemove, 1)
         } else if (updateDetails.operation == "add"){

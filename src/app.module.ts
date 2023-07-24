@@ -24,6 +24,8 @@ import { ServiceModule } from "./service/service.module";
 import { ServiceService } from "./service/service.service";
 import { AppointmentModule } from './appointment/appointment.module';
 import { ReviewModule } from './review/review.module';
+import { GatewayModule } from "./gateway/gateway.module";
+import { SocketModule } from "./socket/socket.module";
 
 
 
@@ -34,8 +36,8 @@ import { ReviewModule } from './review/review.module';
     type: 'mysql',
     host:'localhost',
     port: 3306,
-    username: 'nestTestUser',
-    password: 'nestTestUser123',
+    username: 'NestjsUser',
+    password: 'Triet@23221097@',
     database: 'beautyx',
     entities:[
       ManagerEntity, 
@@ -49,7 +51,7 @@ import { ReviewModule } from './review/review.module';
       ServiceCategoryEntity
     ],
     synchronize: true
-  }), EmployeeModule, CustomerModule, ManagerModule, InventoryModule, ServiceCategoryModule, ServiceModule, SalonModule, AppointmentModule, ReviewModule],
+  }), EmployeeModule, CustomerModule, ManagerModule, InventoryModule, ServiceCategoryModule, ServiceModule, SalonModule, AppointmentModule, ReviewModule, GatewayModule, SocketModule],
   controllers: [AppController],
   providers: [AppService],
 })

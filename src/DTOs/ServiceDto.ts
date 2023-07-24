@@ -24,7 +24,7 @@ export class updateServiceDto{
     @IsNumber()
     price: number
 
-    description: string
+    describption: string
     
 }
 
