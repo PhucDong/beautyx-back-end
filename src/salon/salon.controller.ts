@@ -1,9 +1,11 @@
-import { Body, Controller, Delete, Get, HttpStatus, Param, ParseIntPipe, Post, Put, Req, Res, UploadedFile, UsePipes, ValidationPipe } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, HttpStatus, Param, ParseIntPipe, Post, Put, Query, Req, Res, UploadedFile, UploadedFiles, UseInterceptors, UsePipes, ValidationPipe } from '@nestjs/common';
 import { SalonService } from './salon.service';
 import { createSalonDto, filterSalonDto, recommendSalonDto, sortSalonDto, updateSalonDto, updateSalonReviewDto } from 'src/DTOs/SalonDto';
-import { Request } from 'express';
+import { Request, Response } from 'express';
 import { SalonEntity } from 'src/TypeOrms/SalonEntity';
 import { Express } from 'express'
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
 
 @Controller('salon')
 export class SalonController {
@@ -116,6 +118,13 @@ export class SalonController {
         }
     }
     
+    @Get('search/query')
+    searchSalonQuery(@Query("pageNumber", ParseIntPipe) pageNumber: number, @Query("pageSize", ParseIntPipe) pageSize: number, @Query('searchKey') searchKey: string){
+        // console.log('page number query: ' + pageNumber + ' ' + typeof pageNumber);
+        // console.log('page size query: ' + pageSize + ' ' + typeof pageSize)
+        return this.salonService.searchSalonQuery(searchKey, pageSize, pageNumber);
+    }
+
     @Get('id/:id')
     getSalon(@Param('id', ParseIntPipe) idToFind: number){
         return this.salonService.getSalon(idToFind);
@@ -149,8 +158,38 @@ export class SalonController {
     }
 
     @Post('photo')
-    uploadPhoto(@UploadedFile() file: Express.Multer.File) {
+    @UseInterceptors(FileInterceptor('file', {
+        storage: diskStorage({
+            destination: './pics',
+            filename: (req, file, callback) => {
+                const name = file.originalname.split('.')[0];
+                const fileExtension = file.originalname.split('.')[1];
+                const newFileName = name.split(" ").join('_')+'_'+Date.now()+'.'+fileExtension;
 
+                callback(null, newFileName);
+            }
+        }),
+        fileFilter: (req, file, cb) => {
+            if(!file.originalname.match(/\.(jpg|jpeg|png|gif)$/)) {
+                return cb(null, false);
+            } else
+            cb(null, true);
+        }
+    }))
+    uploadPhoto(@UploadedFile() file: Express.Multer.File) {
+        if (!file) {
+            throw new BadRequestException('File is not an image');
+        } else {
+            const response = {
+                filePath: `https://rmiteduau-my.sharepoint.com/:f:/r/personal/s3700622_rmit_edu_vn/Documents/%5BCapstone%20Projects%5D%20Team%20Resilience/Resources/images/test?csf=1&web=1&e=8AkekA/salon/pictures/${file.filename}`
+            };
+            return response;
+        }
+    }
+
+    @Get('pictures/:filename')
+    async getPicture(@Param('filename') fileName, @Res() res: Response) {
+        res.sendFile(fileName, {root: './pics'});
     }
     
     @Put('update/reviews/id/:id')
