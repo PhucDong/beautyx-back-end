@@ -8,7 +8,7 @@ import { SalonEntity } from "./SalonEntity"
 export class EmployeeEntity extends Profile{
 
     @Column({
-        nullable: false
+        //nullable: false
     })
     job: string
     
@@ -16,7 +16,7 @@ export class EmployeeEntity extends Profile{
     workDays: string
 
     @Column({
-        nullable: false
+        //nullable: false
     })
     salary: number
 

@@ -11,7 +11,12 @@ export class SalonController {
         const salons = await this.salonService.getSalons();
         return salons
     }
-    
+    @Get('keyword/:keyword/size/:pageSize/page/:pageNumber')
+    async getSalonsPage(@Param() params: any){
+        const salons = await this.salonService.getSalonsPage(params.pageNumber, params.pageSize, params.keyword);
+        return salons
+    }
+
     @Get('id/:id')
     getSalon(@Param('id', ParseIntPipe) idToFind: number){
         return this.salonService.getSalon(idToFind);
@@ -33,13 +38,15 @@ export class SalonController {
         return this.salonService.getSalonEmployess(idToFind);
     }
 
-    @Get('search')
-    searchSalon(@Body() searchKey: searchSalonDto){
+    @Get('search/')
+    searchSalon(@Param() params: any, @Body() searchKey: searchSalonDto){
         return this.salonService.searchSalon(searchKey);
     }
     @Get('search/query')
-    searchSalonQuery(@Query('searchKey') searchKey: string){
-        return this.salonService.searchSalonQuery(searchKey);
+    searchSalonQuery(@Query("pageNumber", ParseIntPipe) pageNumber: number, @Query("pageSize", ParseIntPipe) pageSize: number, @Query('searchKey') searchKey: string){
+        // console.log('page number query: ' + pageNumber + ' ' + typeof pageNumber);
+        // console.log('page size query: ' + pageSize + ' ' + typeof pageSize)
+        return this.salonService.searchSalonQuery(searchKey, pageSize, pageNumber);
     }
     @Post('create')
     @UsePipes(ValidationPipe)

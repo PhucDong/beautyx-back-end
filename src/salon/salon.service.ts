@@ -4,7 +4,7 @@ import { createSalonDto, searchSalonDto, updateSalonDto, updateSalonHighLightsDt
 import { AppointmentEntity } from 'src/TypeOrms/AppointmentEntity';
 import { ReviewEntity } from 'src/TypeOrms/ReviewEntity';
 import { SalonEntity } from 'src/TypeOrms/SalonEntity';
-import { In, Repository } from 'typeorm';
+import { ArrayContains, In, Like, Repository } from 'typeorm';
 
 @Injectable()
 export class SalonService {
@@ -15,7 +15,7 @@ export class SalonService {
 
     
     getSalons(){
-        return this.salonRepository.find({relations: ['reviews', 'appointments']});
+        return this.salonRepository.find({relations: ['reviews', 'appointments', 'serviceCategories']});
     }
     async getSalon(idToFind: number){
         const salon = await this.salonRepository.findOne({relations: ['appointments'], where: {id: idToFind}});
@@ -58,12 +58,52 @@ export class SalonService {
         // console.log(salonToReturn)
 
         return salonToReturn
-
-        
-        
         
 
     }
+    async getSalonsPage(page: number, pageSize: number, keyword: string) {
+        const [list, count] = await this.salonRepository.findAndCount({
+        //   order: { createdAt: 'DESC', },
+            relations: ['serviceCategories'],
+            where: [
+                { salonName: Like(`%${keyword}%`) },
+                { salonAddress: Like(`%${keyword}%`) },
+                //{ serviceCategories.some((category) => category.serviceCategoryName == keyword )},
+                {serviceCategories: {serviceCategoryName: Like(`%${keyword}%`) }}
+
+            ],
+            skip: (page - 1) * pageSize,
+            take: pageSize,
+        });
+        return {
+          list,
+          count,
+          page,
+          pageSize,
+        };
+
+        //const reviews = await this.reviewRepository.find({ relations: ['appointment', 'customer'], where: {appointment: { id: In(appointmentIdList) } } })
+        // const salonPage = await this.salonRepository.find({
+
+        //         relations: ['serviceCategories'],
+        //         where: [
+        //             { salonName: Like(`%${keyword}%`) },
+        //             { salonAddress: Like(`%${keyword}%`) },
+        //             //{ serviceCategories.some((category) => category.serviceCategoryName == keyword )},
+        //             //{serviceCategories: ArrayContains([ Like(`%${keyword}%`) ]),}
+        //             {serviceCategories: {serviceCategoryName: Like(`%${keyword}%`) }}
+    
+        //         ],
+        //         skip: (page - 1) * pageSize,
+        //         take: pageSize,
+        //     });
+
+
+        //     return salonPage
+
+    }
+      
+
     async searchSalon(searchKey: searchSalonDto){
         const salons = await this.salonRepository.find({relations: ['serviceCategories']});
 
@@ -73,8 +113,6 @@ export class SalonService {
         console.log("list of keys to find")
         console.log(searchKeyList)
 
-        
-
             // if (!caseSensitive) {
             //     str = str.toLowerCase();
             //     searchStr = searchStr.toLowerCase();
@@ -143,29 +181,25 @@ export class SalonService {
         }
 
         foundList.sort((a, b) => a.totalSearchScore + b.totalSearchScore);
-
+        
         return foundList
         
     }
-    async searchSalonQuery(searchKey: string){
+    async searchSalonQuery(searchKey: string, pageSize: number, pageNumber: number){
         const salons = await this.salonRepository.find({relations: ['serviceCategories']});
 
         if (searchKey.length == 0) throw new HttpException('the search keyword cannot be empty', HttpStatus.BAD_REQUEST)
 
+        searchKey = searchKey.toLowerCase();
+
         const searchKeyList = searchKey.split(' ')
-        console.log("list of keys to find")
+        console.log("list of keys to find in query")
         console.log(searchKeyList)
-
-        
-
-            // if (!caseSensitive) {
-            //     str = str.toLowerCase();
-            //     searchStr = searchStr.toLowerCase();
-            // }
 
         var foundList = []
 
         for (var i = 0; i < salons.length; i++){
+            //console.log('search loop: ' + i)
             const salonToSearch = salons[i]
             // console.log("salon being searched")
             //console.log(salonToSearch)
@@ -176,13 +210,13 @@ export class SalonService {
                 const searchKey = searchKeyList[k]
                     
                 var startIndex = 0, index: number, salonNameIndices = [], salonAddressIndices = [], salonServiceCategoryIndices = [];
-                while ((index = salonToSearch.salonName.indexOf(searchKey, startIndex)) > -1) {
+                while ((index = salonToSearch.salonName.toLowerCase().indexOf(searchKey, startIndex)) > -1) {
                     salonNameIndices.push(index);
                     startIndex = index + searchKey.length;
                 }
                 
                 startIndex = 0
-                while ((index = salonToSearch.salonAddress.indexOf(searchKey, startIndex)) > -1) {
+                while ((index = salonToSearch.salonAddress.toLowerCase().indexOf(searchKey, startIndex)) > -1) {
                     salonAddressIndices.push(index);
                     startIndex = index + searchKey.length;
                 }
@@ -191,7 +225,7 @@ export class SalonService {
                 for ( var j = 0; j < salonToSearch.serviceCategories.length; j++){
                     const categoryToSearch = salonToSearch.serviceCategories[j]
                     var categoryStartIndex = 0, categoryIndices = []
-                    while ((index = categoryToSearch.serviceCategoryName.indexOf(searchKey, categoryStartIndex)) > -1) {
+                    while ((index = categoryToSearch.serviceCategoryName.toLowerCase().indexOf(searchKey, categoryStartIndex)) > -1) {
                         categoryIndices.push(index);
                         categoryStartIndex = index + searchKey.length;
                     }
@@ -209,7 +243,7 @@ export class SalonService {
                 if (resultScore != 0) {
                     searchkeyFound++
                     totalSearchScore += resultScore
-                    // console.log("number of search key found: " + searchkeyFound)
+                    //console.log("number of search key found: " + searchkeyFound)
                 }
             }
             // if (searchkeyFound == searchKeyList.length) {
@@ -219,17 +253,27 @@ export class SalonService {
                 
             // }
             if (searchkeyFound != 0) {
+                //console.log("search key found is added to found list: " + searchkeyFound)
                 const salonFound = {...salonToSearch, totalSearchScore}
                 foundList.push(salonFound)
                 
             }
         }
-
-        foundList.sort((a, b) => a.totalSearchScore + b.totalSearchScore);
-
-        return foundList
+        
+        foundList.sort((salonA, salonB) => salonA.totalSearchScore + salonB.totalSearchScore);
+        //console.log(foundList)
+        var salonPage = []
+        console.log('page number: ' + pageNumber)
+        console.log('page size: ' + pageSize)
+        for (var pageStartIndex = (pageNumber - 1) * pageSize; pageStartIndex < pageSize * pageNumber; pageStartIndex++){
+            console.log('loop number: ' + pageStartIndex)
+            salonPage.push(foundList[pageStartIndex])
+        }
+        //console.log(salonPage)
+        return salonPage
         
     }
+
     getSalonServiceCategories(idToFind: number){
         return this.salonRepository.findOne({relations: ['serviceCategories'], where: {id: idToFind}});
     }

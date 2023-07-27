@@ -26,5 +26,11 @@ export class CustomerEntity extends Profile{
     @ManyToMany(() => SalonEntity)
     @JoinTable()
     salons: SalonEntity[]
+    
+    @Column({
+        nullable: false,
+        //unique: true
+    })
+    password: string
 
 }

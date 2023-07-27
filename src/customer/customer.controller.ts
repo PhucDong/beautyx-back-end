@@ -1,6 +1,7 @@
 import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, UsePipes, ValidationPipe } from '@nestjs/common';
 import { CustomerService } from './customer.service';
 import { createCustomerDto, updateCustomerDto, updateFavoriteSalonDto } from 'src/DTOs/CustomerDto';
+import { registerCustomerDto } from 'src/DTOs/AuthenDto';
 
 @Controller('customer')
 export class CustomerController {
@@ -29,7 +30,12 @@ export class CustomerController {
     createCustomer(@Body() newCustomer: createCustomerDto){
         return this.customerService.createCustomer(newCustomer)
     }
-    
+
+    @Post('register')
+    @UsePipes(ValidationPipe)
+    registerCustomer(@Body() newCustomer: registerCustomerDto){
+        return this.customerService.registerCustomer(newCustomer)
+    }
     @Put('update/id/:id')
     @UsePipes(ValidationPipe)
     async updateCustomer(@Param('id', ParseIntPipe) idToUpdate: number, @Body() updateDetails: updateCustomerDto){

@@ -24,6 +24,7 @@ import { ServiceModule } from "./service/service.module";
 import { ServiceService } from "./service/service.service";
 import { AppointmentModule } from './appointment/appointment.module';
 import { ReviewModule } from './review/review.module';
+import { AuthenModule } from './authen/authen.module';
 
 
 
@@ -49,7 +50,7 @@ import { ReviewModule } from './review/review.module';
       ServiceCategoryEntity
     ],
     synchronize: true
-  }), EmployeeModule, CustomerModule, ManagerModule, InventoryModule, ServiceCategoryModule, ServiceModule, SalonModule, AppointmentModule, ReviewModule],
+  }), EmployeeModule, CustomerModule, ManagerModule, InventoryModule, ServiceCategoryModule, ServiceModule, SalonModule, AppointmentModule, ReviewModule, AuthenModule],
   controllers: [AppController],
   providers: [AppService],
 })
