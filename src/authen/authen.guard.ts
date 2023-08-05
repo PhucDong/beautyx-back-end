@@ -5,11 +5,18 @@ import { jwtConstants } from './constants';
 import { Request } from 'express';
 import { Reflector } from '@nestjs/core';
 import { ROLES_KEY, RoleEnum } from 'src/Custom Decorator/roles.decorator';
+import { InjectRepository } from '@nestjs/typeorm';
+import { CustomerEntity } from 'src/TypeOrms/CustomerEntity';
+import { SalonEntity } from 'src/TypeOrms/SalonEntity';
+import { Repository } from 'typeorm';
   
 @Injectable()
 export class LoginGuard implements CanActivate {
-    constructor(private jwtService: JwtService) {}
-  
+
+    constructor(private jwtService: JwtService
+      
+      ) {}
+   
     async canActivate(context: ExecutionContext): Promise<boolean> {
       console.log('checking the jwt token------------')
       const request = context.switchToHttp().getRequest();
@@ -58,13 +65,26 @@ export class RolesGuard implements CanActivate {
     //const { user } = context.switchToHttp().getRequest();
     const request = context.switchToHttp().getRequest();
     const user = request.user
-    console.log("role guard user: " + user.username + ' ' + user.roles)
+    console.log("role guard user: " + user.fullName + ' ' + user.roles)
 
     console.log("checking user role: ")
     console.log(requiredRoles[0] == user.roles)
 
-    return requiredRoles.some((role) => user.roles == role);
+    return requiredRoles.some((role) => user.roles?.includes(role));
   }
 }
 
-  
+@Injectable()
+export class customerGuard implements CanActivate {
+  canActivate(context: ExecutionContext): boolean {
+    
+    const request = context.switchToHttp().getRequest();
+    const user = request.user
+    console.log("the user in the request: " + user.sub)
+    console.log("request params: " + request.params.id)
+
+   
+
+    return (user.sub == request.params.id)
+  }
+}

@@ -7,10 +7,10 @@ import { RoleEnum, Roles } from 'src/Custom Decorator/roles.decorator';
 @Controller('salon')
 export class SalonController {
     constructor(private readonly salonService: SalonService) {}
-
-    @Roles(RoleEnum.Manager)
+    
+    @Roles(RoleEnum.Customer)
     @UseGuards(LoginGuard, RolesGuard)
-    @Get()
+    @Get('')
     async getSalons(){
         const salons = await this.salonService.getSalons();
         return salons
@@ -83,42 +83,6 @@ export class SalonController {
         console.log(updateDetails)
         return this.salonService.updateSalonWorkDayList(idToUpdate, updateDetails)
     }
-
-    @Post('photo')
-    @UseInterceptors(FileInterceptor('file', {
-        storage: diskStorage({
-            destination: './pics',
-            filename: (req, file, callback) => {
-                const name = file.originalname.split('.')[0];
-                const fileExtension = file.originalname.split('.')[1];
-                const newFileName = name.split(" ").join('_')+'_'+Date.now()+'.'+fileExtension;
-
-                callback(null, newFileName);
-            }
-        }),
-        fileFilter: (req, file, cb) => {
-            if(!file.originalname.match(/\.(jpg|jpeg|png|gif)$/)) {
-                return cb(null, false);
-            } else
-            cb(null, true);
-        }
-    }))
-    uploadPhoto(@UploadedFile() file: Express.Multer.File) {
-        if (!file) {
-            throw new BadRequestException('File is not an image');
-        } else {
-            const response = {
-                filePath: `https://rmiteduau-my.sharepoint.com/:f:/r/personal/s3700622_rmit_edu_vn/Documents/%5BCapstone%20Projects%5D%20Team%20Resilience/Resources/images/test?csf=1&web=1&e=8AkekA/salon/pictures/${file.filename}`
-            };
-            return response;
-        }
-    }
-
-    @Get('pictures/:filename')
-    async getPicture(@Param('filename') fileName, @Res() res: Response) {
-        res.sendFile(fileName, {root: './pics'});
-    }
-
     @Delete('delete/id/:id')
     deleteSalon(@Param('id', ParseIntPipe) idToDelete: number,){
         return this.salonService.deleteSalon(idToDelete)

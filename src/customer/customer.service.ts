@@ -38,7 +38,9 @@ export class CustomerService {
         return this.customerRepository.findOne({relations: ['appointments'], where: {id: idToFind}});
     }
     createCustomer(newCustomer: createCustomerDto){
-        const customerToSave = this.customerRepository.create({...newCustomer, roles: [RoleEnum.Customer]});
+        const password = passwordToHash(newCustomer.password)
+        const roles = [RoleEnum.Customer]
+        const customerToSave = this.customerRepository.create({...newCustomer, password, roles});
         return this.customerRepository.save(customerToSave)
     }
 

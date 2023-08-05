@@ -1,7 +1,8 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, UsePipes, ValidationPipe } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
 import { CustomerService } from './customer.service';
 import { createCustomerDto, updateCustomerDto, updateFavoriteSalonDto } from 'src/DTOs/CustomerDto';
 import { registerCustomerDto } from 'src/DTOs/AuthenDto';
+import { LoginGuard, customerGuard } from 'src/authen/authen.guard';
 
 @Controller('customer')
 export class CustomerController {
@@ -12,6 +13,7 @@ export class CustomerController {
         const customers = await this.customerService.getCustomers();
         return customers
     }
+    @UseGuards(LoginGuard, customerGuard)
     @Get('id/:id')
     getCustomer(@Param('id', ParseIntPipe) idToFind: number){
         return this.customerService.getCustomer(idToFind);
@@ -34,6 +36,7 @@ export class CustomerController {
     @Post('register')
     @UsePipes(ValidationPipe)
     registerCustomer(@Body() newCustomer: registerCustomerDto){
+        console.log('registering customer')
         return this.customerService.registerCustomer(newCustomer)
     }
     @Put('update/id/:id')

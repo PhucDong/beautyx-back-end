@@ -69,14 +69,17 @@ export abstract class Profile {
         //default: '',
     })
     address: string
+
     @Column({
+        nullable: true,
         type: 'enum',
         enum: GenderEnum,
-        default: GenderEnum.MALE
+        //default: GenderEnum.OTHERS
     })
     gender: GenderEnum
 
     @Column({
+        nullable: true,
         type: 'enum',
         enum: RoleEnum,
     })

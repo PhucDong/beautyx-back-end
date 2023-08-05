@@ -14,6 +14,9 @@ export class createCustomerDto{
     @IsEmail()
     email: string
 
+    @IsNotEmpty()
+    password: string
+
     @IsNumberString()
     phone: string
 
@@ -30,11 +33,9 @@ export class createCustomerDto{
     gender: GenderEnum
 
     //customer section
-
  
 }   
 
-   
 export class updateCustomerDto{
     //user section
     fisrtname: string
@@ -43,6 +44,8 @@ export class updateCustomerDto{
 
     @IsEmail()
     email: string
+
+    password: string
 
     @IsNumberString()
     phone: string
