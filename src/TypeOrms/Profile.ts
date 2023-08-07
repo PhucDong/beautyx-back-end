@@ -1,3 +1,5 @@
+import { Exclude } from "class-transformer";
+import { RoleEnum } from "src/Custom Decorator/roles.decorator";
 import { Column, Entity, JoinColumn, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 
 export enum GenderEnum {
@@ -35,9 +37,12 @@ export abstract class Profile {
         //default: '',
     })
     email: string
+    
+
+    
 
     @Column({
-        nullable: false,
+        nullable: true,
         unique: true
         //default: '',
     })
@@ -45,13 +50,13 @@ export abstract class Profile {
 
     @Column({
         name: 'Birth',
-        nullable: false,
+        nullable: true,
         //default: new Date(),
     })
     dateOfBirth: Date
 
     @Column({
-        nullable: false,
+        nullable: true,
         //unique: true
         //default: '',
     })
@@ -59,19 +64,26 @@ export abstract class Profile {
 
     @Column({
         name:'Address',
-        nullable: false,
+        nullable: true,
         //unique: true
         //default: '',
     })
     address: string
+
     @Column({
+        nullable: true,
         type: 'enum',
         enum: GenderEnum,
-        default: GenderEnum.MALE
+        //default: GenderEnum.OTHERS
     })
     gender: GenderEnum
 
-
+    @Column({
+        nullable: true,
+        type: 'enum',
+        enum: RoleEnum,
+    })
+    roles: RoleEnum[];
    
 
 }

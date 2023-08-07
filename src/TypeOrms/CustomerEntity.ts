@@ -3,6 +3,7 @@ import { ReviewEntity } from "./ReviewEntity";
 import { AppointmentEntity } from "./AppointmentEntity";
 import { Profile } from "./Profile";
 import { SalonEntity } from "./SalonEntity";
+import { RoleEnum } from "src/Custom Decorator/roles.decorator";
 
 @Entity()
 export class CustomerEntity extends Profile{
@@ -26,5 +27,18 @@ export class CustomerEntity extends Profile{
     @ManyToMany(() => SalonEntity)
     @JoinTable()
     salons: SalonEntity[]
+    
+    @Column({
+        nullable: false,
+        //unique: true
+    })
+    password: string
+
+    @Column({
+        type: 'enum',
+        enum: RoleEnum,
+        default: RoleEnum.Customer
+    })
+    roles: RoleEnum[];
 
 }

@@ -22,10 +22,7 @@ export class registerCustomerDto{
 
     @IsNotEmpty()
     password: string
-    
-    @IsEnum(GenderEnum)
-    gender: GenderEnum
 
     //customer section
  
-}
+} 

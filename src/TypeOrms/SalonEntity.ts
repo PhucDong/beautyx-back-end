@@ -5,7 +5,6 @@ import { InventoryEntity } from "./InventoryEntity";
 import { ManagerEntity } from "./ManagerEntity";
 import { ServiceCategoryEntity } from "./ServiceCategoryEntity";
 import { ReviewEntity } from "./ReviewEntity";
-import { IsNotEmpty, Max, Min } from "class-validator";
 
 
 @Entity()
@@ -22,27 +21,13 @@ export class SalonEntity {
     salonAddress: string
     
     @Column()
-    salonImage: string
-
-    @Column({
-        type: 'time'
-    })
-    startTime: Date
-
-    @Column({
-        type: 'time'
-    })
-    endTime: Date
+    workDays: string
 
     @Column()
-    salonType: string
+    highLights: string
 
-    @Column({
-        type: 'real',
-    })
-    @Min(1)
-    @Max(5)
-    averageRating: number;
+    @Column()
+    description: string
 
     @OneToMany(() => ServiceCategoryEntity, (serivceCategories) => serivceCategories.salon)
     serviceCategories: ServiceCategoryEntity[]

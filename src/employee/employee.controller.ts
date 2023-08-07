@@ -1,6 +1,6 @@
 import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, UsePipes, ValidationPipe } from '@nestjs/common';
 import { EmployeeService } from './employee.service';
-import { createEmployeeDto, getEmployeesAvailableDto, updateEmployeeDto, updateEmployeeWorkDayDto } from 'src/DTOs/EmployeeDto';
+import { createEmployeeDto, getEmployeesAvailableDto, updateEmployeeDto, updateEmployeeWorkDayDto, updateEmployeeWorkDayListDto } from 'src/DTOs/EmployeeDto';
 
 @Controller('employee')
 export class EmployeeController {
@@ -49,6 +49,11 @@ export class EmployeeController {
         return this.employeeService.updateEmployeeWorkDay(idToUpdate, updateDetails)
     }
 
+    @Put('update/workdays/list/id/:id')
+    @UsePipes(ValidationPipe)
+    updateEmployeeWorkDayList(@Param('id', ParseIntPipe) idToUpdate: number, @Body() updateDetails: updateEmployeeWorkDayListDto){
+        return this.employeeService.updateEmployeeWorkDayList(idToUpdate, updateDetails)
+    }
 
     @Delete('delete/id/:id')
     deleteEmployee(@Param('id', ParseIntPipe) idToDelete: number,){

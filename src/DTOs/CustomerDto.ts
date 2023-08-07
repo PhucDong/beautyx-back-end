@@ -1,4 +1,5 @@
 import { IsDateString, IsEmail, IsEmpty, IsEnum, IsNotEmpty, IsNumber, IsNumberString } from "class-validator"
+import { RoleEnum } from "src/Custom Decorator/roles.decorator"
 import { GenderEnum } from "src/TypeOrms/Profile"
 import { SalonEntity } from "src/TypeOrms/SalonEntity"
 
@@ -12,6 +13,9 @@ export class createCustomerDto{
 
     @IsEmail()
     email: string
+
+    @IsNotEmpty()
+    password: string
 
     @IsNumberString()
     phone: string
@@ -29,11 +33,9 @@ export class createCustomerDto{
     gender: GenderEnum
 
     //customer section
-
-
- 
  
 }   
+
 export class updateCustomerDto{
     //user section
     fisrtname: string
@@ -42,6 +44,8 @@ export class updateCustomerDto{
 
     @IsEmail()
     email: string
+
+    password: string
 
     @IsNumberString()
     phone: string
@@ -65,6 +69,9 @@ export class updateCustomerDto{
     serviceUsageTime: number
  
     salon: SalonEntity[]
+
+    @IsEnum(RoleEnum)
+    roles: RoleEnum[]
 
 }   
 

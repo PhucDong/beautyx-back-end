@@ -17,8 +17,10 @@ export class ServiceService {
     getServices(){
         return this.serviceRepository.find({relations: []});
     }
-    getService(idToFind: number){
-       return this.serviceRepository.findOneBy({id: idToFind});
+    async getService(idToFind: number){
+        const service = await this.serviceRepository.findOneBy({id: idToFind});
+        if (!service) throw new HttpException('service with the given id cannot be found', HttpStatus.NOT_FOUND)
+        return service
     }
 
     async createService(categoryId: number, newService: createServiceDto){

@@ -12,9 +12,3 @@ export class updateServiceCategoryDto {
     serviceCategoryName: string
 
 }
-export class queryServiceCategoryDto {
-
-    @IsNotEmpty()
-    serviceCategoryName: string
-
-}

@@ -8,27 +8,15 @@ import { SalonEntity } from "./SalonEntity"
 export class EmployeeEntity extends Profile{
 
     @Column({
-        nullable: false
+        //nullable: false
     })
     job: string
-
-    @Column({
-        nullable: false,
-        type: 'time'
-    })
-    startTime: Date
-
-    @Column({
-        nullable: false,
-        type: 'time'
-    })
-    endTime: Date
     
     @Column()
     workDays: string
 
     @Column({
-        nullable: false
+        //nullable: false
     })
     salary: number
 

@@ -16,10 +16,11 @@ export class InventoryService {
     getinventories(){
         return this.inventoryRepository.find();
     }
-    getInventory(idToFind: number){
-       return this.inventoryRepository.findOneBy({id: idToFind});
+    async getInventory(idToFind: number){
+        const inventory = await this.inventoryRepository.findOneBy({id: idToFind})
+        if (!inventory) throw new HttpException('the inventory with the given id  cannot be found', HttpStatus.NOT_FOUND)
+        return inventory
     }
-
 
     async createInventory(salonId: number, newInventory: createInventoryDto){
         const salonToUpdate = await this.salonRepository.findOne({

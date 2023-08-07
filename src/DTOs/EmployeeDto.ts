@@ -1,4 +1,5 @@
-import { IsDateString, IsEmail, IsEnum, IsNotEmpty, IsNumber, IsNumberString, Matches } from "class-validator"
+import { Type } from "class-transformer"
+import { IsDateString, IsEmail, IsEnum, IsNotEmpty, IsNotEmptyObject, IsNumber, IsNumberString, Matches, ValidateNested } from "class-validator"
 import { GenderEnum } from "src/TypeOrms/Profile"
 
 export class createEmployeeDto{
@@ -23,7 +24,7 @@ export class createEmployeeDto{
 
     @IsNotEmpty()
     address: string
-    
+
     @IsEnum(GenderEnum)
     gender: GenderEnum
 
@@ -32,15 +33,9 @@ export class createEmployeeDto{
     @IsNotEmpty()
     job: string
 
-    @IsNotEmpty()
-    workDays: string
-
-    //@Matches(/^(1[0-2]|0?[0-9]):([0-5]?[0-9]):([0-5]?[0-9])$/)
-    @Matches(/^([0-1]?[0-9]|2?[0-4]):([0-5]?[0-9]):([0-5]?[0-9])$/)
-    startTime: Date
-
-    @Matches(/^([0-1]?[0-9]|2?[0-4]):([0-5]?[0-9]):([0-5]?[0-9])$/)
-    endTime: Date
+    @ValidateNested()
+    @Type(() => updateEmployeeWorkDayDto)
+    workDays: updateEmployeeWorkDayDto[]
 
     @IsNumber()
     salary: number
@@ -75,12 +70,6 @@ export class updateEmployeeDto{
     //employee section
 
     job: string
-    
-    @Matches(/^([0-1]?[0-9]|2?[0-4]):([0-5]?[0-9]):([0-5]?[0-9])$/)
-    startTime: Date
-
-    @Matches(/^([0-1]?[0-9]|2?[0-4]):([0-5]?[0-9]):([0-5]?[0-9])$/)
-    endTime: Date
 
     workDays: string
 
@@ -100,7 +89,20 @@ export class updateEmployeeDto{
 export class updateEmployeeWorkDayDto {
 
     @IsNotEmpty()
-    workDays: string
+    workDay: string
+
+    @Matches(/^([0-1]?[0-9]|2?[0-4]):([0-5]?[0-9]):([0-5]?[0-9])$/)
+    startTime: Date
+
+    @Matches(/^([0-1]?[0-9]|2?[0-4]):([0-5]?[0-9]):([0-5]?[0-9])$/)
+    endTime: Date
+
+}
+export class updateEmployeeWorkDayListDto {
+
+    @ValidateNested()
+    @Type(() => updateEmployeeWorkDayDto)
+    workDayList: updateEmployeeWorkDayDto[]
 
 }
 
