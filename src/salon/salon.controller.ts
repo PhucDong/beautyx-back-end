@@ -1,8 +1,11 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, Query, UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, Query, Res, UploadedFile, UseGuards, UseInterceptors, UsePipes, ValidationPipe } from '@nestjs/common';
 import { SalonService } from './salon.service';
 import { createSalonDto, searchSalonDto, updateSalonDto, updateSalonHighLightsDto, updateSalonWorkDayDto, updateSalonWorkDayListDto } from 'src/DTOs/SalonDto';
 import { LoginGuard, RolesGuard } from 'src/authen/authen.guard';
 import { RoleEnum, Roles } from 'src/Custom Decorator/roles.decorator';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { Request, Response } from 'express';
 
 @Controller('salon')
 export class SalonController {
@@ -58,6 +61,41 @@ export class SalonController {
         return this.salonService.createSalon(newSalon)
     }
     
+    @Post('photo')
+    @UseInterceptors(FileInterceptor('file', {
+        storage: diskStorage({
+            destination: './pics',
+            filename: (req, file, callback) => {
+                const name = file.originalname.split('.')[0];
+                const fileExtension = file.originalname.split('.')[1];
+                const newFileName = name.split(" ").join('_')+'_'+Date.now()+'.'+fileExtension;
+
+                callback(null, newFileName);
+            }
+        }),
+        fileFilter: (req, file, cb) => {
+            if(!file.originalname.match(/\.(jpg|jpeg|png|gif)$/)) {
+                return cb(null, false);
+            } else
+            cb(null, true);
+        }
+    }))
+    uploadPhoto(@UploadedFile() file: Express.Multer.File) {
+        if (!file) {
+            throw new BadRequestException('File is not an image');
+        } else {
+            const response = {
+                filePath: `/salon/pictures/${file.filename}`
+            };
+            return response;
+        }
+    }
+
+    @Get('pictures/:filename')
+    async getPicture(@Param('filename') fileName, @Res() res: Response) {
+        res.sendFile(fileName, {root: './pics'});
+    }
+
     @Put('update/id/:id')
     @UsePipes(ValidationPipe)
     async updateSalon(@Param('id', ParseIntPipe) idToUpdate: number, @Body() updateDetails: updateSalonDto){
