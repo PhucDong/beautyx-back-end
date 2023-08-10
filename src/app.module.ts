@@ -35,8 +35,8 @@ import { AuthenModule } from './authen/authen.module';
     type: 'mysql',
     host:'localhost',
     port: 3306,
-    username: 'nestTestUser',
-    password: 'nestTestUser123',
+    username: 'NestjsUser',
+    password: 'Triet@23221097@',
     database: 'beautyx',
     entities:[
       ManagerEntity, 

@@ -37,6 +37,10 @@ export class SalonService {
         return salonPage
     }
 
+    async queryBuilder(alias: string) {
+        return this.salonRepository.createQueryBuilder(alias)
+    }
+
     async getSalon(idToFind: number){
         const salon = await this.salonRepository.findOne({relations: ['appointments'], where: {id: idToFind}});
         if (!salon) throw new HttpException('the salon with the given id cannot be found', HttpStatus.NOT_FOUND)

@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, Query, Res, UploadedFile, UseGuards, UseInterceptors, UsePipes, ValidationPipe } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, Query, Req, Res, UploadedFile, UseGuards, UseInterceptors, UsePipes, ValidationPipe } from '@nestjs/common';
 import { SalonService } from './salon.service';
 import { createSalonDto, searchSalonDto, updateSalonDto, updateSalonHighLightsDto, updateSalonWorkDayDto, updateSalonWorkDayListDto } from 'src/DTOs/SalonDto';
 import { LoginGuard, RolesGuard } from 'src/authen/authen.guard';
@@ -18,6 +18,97 @@ export class SalonController {
         const salons = await this.salonService.getSalons(pageSize, pageNumber);
         return salons
     }
+
+    @Get('namesorted')
+    async getSortSalons(@Req() req: Request) {
+        const salonsBuilder = await this.salonService.queryBuilder('salon');
+
+        // if (req.query.salon) {
+        //     salonsBuilder.where("salon.salonName LIKE :salon OR salon.salonAddress LIKE :salon", {salon: `%${req.query.salon}%`})
+        // }
+
+        salonsBuilder
+        .leftJoin('salon.reviews', 'reviews')
+        .addSelect('AVG(reviews.rating)', 'salon_averageRating')
+        .groupBy('salon.id')
+
+        const sort: any = req.query.sort;
+
+        if (sort) {
+            salonsBuilder.orderBy('salon.salonName', sort.toUpperCase())
+            .addOrderBy('salon.salonAddress', sort.toUpperCase())
+        }
+
+        const page: number = parseInt(req.query.page as any) || 1;
+        const perPage = 8;
+        const total = await salonsBuilder.getCount();
+
+        salonsBuilder.offset((page - 1) * perPage).limit(perPage);
+
+        return {
+            data: await salonsBuilder.getMany(),
+            total,
+            page,
+            // last_page: Math.ceil(total/perPage)
+        }
+    }
+
+    @Get('filter')
+    async getFilter(@Req() req: Request) {
+        const salonsBuilder = await this.salonService.queryBuilder('salon');
+
+        if (req.query.salon) {
+            salonsBuilder.where("salon.salonType LIKE :salon", {salon: `%${req.query.salon}%`})
+        }
+
+        salonsBuilder
+        .leftJoin('salon.reviews', 'reviews')
+        .addSelect('AVG(reviews.rating)', 'salon_averageRating')
+        .orderBy('salon.salonName', 'ASC')
+        .addOrderBy('salon.salonAddress', 'ASC')
+        .groupBy('salon.id')
+
+        const page: number = parseInt(req.query.page as any) || 1;
+        const perPage = 8;
+        const total = await salonsBuilder.getCount();
+
+        salonsBuilder.offset((page - 1) * perPage).limit(perPage);
+
+        return {
+            data: await salonsBuilder.getMany(),
+            total,
+            page,
+            // last_page: Math.ceil(total/perPage)
+        }
+    }
+
+    @Get('recommendation')
+    async getRecomnendation(@Req() req: Request) {
+        const salonsBuilder = await this.salonService.queryBuilder('salon');
+
+        salonsBuilder
+        .leftJoin('salon.reviews', 'reviews')
+        .addSelect('AVG(reviews.rating)', 'salon_averageRating')
+        .orderBy('salon_averageRating', 'DESC')
+        .addOrderBy('salon.salonName', 'ASC')
+        .addOrderBy('salon.salonAddress', 'ASC')
+        .groupBy('salon.id')
+        
+
+        const page: number = parseInt(req.query.page as any) || 1;
+        const perPage = 8;
+        const total = await salonsBuilder.getCount();
+
+        salonsBuilder.offset((page - 1) * perPage).limit(perPage);
+
+        return {
+            data: await salonsBuilder.getMany(),
+            total,
+            page,
+            // last_page: Math.ceil(total/perPage)
+        }
+    }
+    
     @Get('keyword/:keyword/size/:pageSize/page/:pageNumber')
     async getSalonsPage(@Param() params: any){
         const salons = await this.salonService.getSalonsPage(params.pageNumber, params.pageSize, params.keyword);
