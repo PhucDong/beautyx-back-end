@@ -45,8 +45,8 @@ export class SalonEntity {
     @JoinColumn()
     manager: ManagerEntity
 
-    @ManyToMany(() => ReviewEntity)
-    @JoinTable()
-    reviews: ReviewEntity[]
+    // @ManyToMany(() => ReviewEntity)
+    // @JoinTable()
+    // reviews: ReviewEntity[]
     
 }

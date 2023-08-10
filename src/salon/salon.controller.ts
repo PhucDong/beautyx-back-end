@@ -11,11 +11,11 @@ import { Request, Response } from 'express';
 export class SalonController {
     constructor(private readonly salonService: SalonService) {}
     
-    @Roles(RoleEnum.Customer)
-    @UseGuards(LoginGuard, RolesGuard)
+    //@Roles(RoleEnum.Customer)
+    //@UseGuards(LoginGuard, RolesGuard)
     @Get('')
-    async getSalons(){
-        const salons = await this.salonService.getSalons();
+    async getSalons(@Query("pageNumber", ParseIntPipe) pageNumber: number, @Query("pageSize", ParseIntPipe) pageSize: number){
+        const salons = await this.salonService.getSalons(pageSize, pageNumber);
         return salons
     }
     @Get('keyword/:keyword/size/:pageSize/page/:pageNumber')

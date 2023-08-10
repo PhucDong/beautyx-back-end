@@ -14,48 +14,34 @@ export class SalonService {
         ) {}
 
     
-    getSalons(){
-        return this.salonRepository.find({relations: ['reviews', 'appointments', 'serviceCategories']});
+    async getSalons(pageSize: number, pageNumber: number){
+        const salons = await this.salonRepository.find({relations: ['appointments']});
+        var salonsToReturn = []
+        for (var i = 0; i < salons.length; i++){
+            
+            let salonToReturn = await this.formatSalonForDisplay(salons[i])
+            salonsToReturn.push(salonToReturn)
+        }
+        //salonsToReturn.sort((a, b) => a.salonRating + b.salonRating);
+        //console.log(foundList)
+        const sortedSalons = this.quickSortSalonRating(salonsToReturn)
+
+        var salonPage = []
+        // console.log('page number: ' + pageNumber)
+        // console.log('page size: ' + pageSize)
+        for (var pageStartIndex = (pageNumber - 1) * pageSize; pageStartIndex < pageSize * pageNumber; pageStartIndex++){
+            console.log('loop number: ' + pageStartIndex)
+            salonPage.push(sortedSalons[pageStartIndex])
+            console.log(sortedSalons[pageStartIndex].salonRating)
+        }
+        return salonPage
     }
+
     async getSalon(idToFind: number){
         const salon = await this.salonRepository.findOne({relations: ['appointments'], where: {id: idToFind}});
         if (!salon) throw new HttpException('the salon with the given id cannot be found', HttpStatus.NOT_FOUND)
 
-        let appointmentIdList: number[] = []
-
-        for ( var i = 0; i < salon.appointments.length; i++) {
-            appointmentIdList.push(salon.appointments[i].id)
-        }
-        
-        // console.log('list of appointment id: --------------');
-        // console.log(appointmentIdList)
-
-        const reviews = await this.reviewRepository.find({ relations: ['appointment', 'customer'], where: {appointment: { id: In(appointmentIdList) } } })
-        // console.log('review list by appointment object result:-------------')
-        // console.log(reviews)
-        var reviewsToReturn = []
-        for (var i = 0; i < reviews.length; i++){
-            const reviewFormated = {
-                rating: reviews[i].rating,
-                comment: reviews[i].comment,
-                customer: reviews[i].customer
-            }
-            reviewsToReturn.push(reviewFormated)
-        }
-        const highlightsToReturn = salon.highLights.split(',')
-
-        var workDaysListToReturn = this.workDayStringToArray(salon.workDays)
-
-        const salonToReturn = {
-            salonName: salon.salonName, 
-            salonAddress: salon.salonAddress,
-            highLights: highlightsToReturn,
-            description: salon.description,
-            workDays: workDaysListToReturn,
-            reviews: reviewsToReturn
-        }
-        // console.log("salon to return------------")
-        // console.log(salonToReturn)
+        const salonToReturn = this.formatSalonForDisplay(salon)
 
         return salonToReturn
         
@@ -260,14 +246,15 @@ export class SalonService {
             }
         }
         
-        foundList.sort((salonA, salonB) => salonA.totalSearchScore + salonB.totalSearchScore);
+        foundList.sort((a, b) => a.totalSearchScore + b.totalSearchScore);
+        const foundListSorted = this.quickSortSearchScore(foundList)
         //console.log(foundList)
         var salonPage = []
         console.log('page number: ' + pageNumber)
         console.log('page size: ' + pageSize)
         for (var pageStartIndex = (pageNumber - 1) * pageSize; pageStartIndex < pageSize * pageNumber; pageStartIndex++){
             console.log('loop number: ' + pageStartIndex)
-            salonPage.push(foundList[pageStartIndex])
+            salonPage.push(foundListSorted[pageStartIndex])
         }
         //console.log(salonPage)
         return salonPage
@@ -397,7 +384,7 @@ export class SalonService {
         return this.salonRepository.delete( idToDelete)
 
     }
-
+  
     workDayStringToArray(workDayStr: string){
         const workDaysList = workDayStr.split(',')
         var workDaysListToReturn = []
@@ -411,6 +398,100 @@ export class SalonService {
         }
         return workDaysListToReturn
     }
+    async formatSalonForDisplay(salon) {
+        console.log("current salon: " + salon.salonName)
+        let appointmentIdList: number[] = []
+
+        for ( var i = 0; i < salon.appointments.length; i++) {
+            appointmentIdList.push(salon.appointments[i].id)
+        }
+        
+        // console.log('list of appointment id: --------------');
+        // console.log(appointmentIdList)
+
+        const reviews = await this.reviewRepository.find({ relations: ['appointment', 'customer'], where: {appointment: { id: In(appointmentIdList) } } })
+        // console.log('review list by appointment object result:-------------')
+        // console.log(reviews)
+        var reviewsToReturn = []
+        let sum = 0
+        for (var j = 0; j < reviews.length; j++){
+            console.log('review number: ' + j)
+            const reviewFormated = {
+                rating: reviews[j].rating,
+                comment: reviews[j].comment,
+                customer: reviews[j].customer
+            }
+            sum += reviews[j].rating
+            reviewsToReturn.push(reviewFormated)
+        }
+        
+        console.log('sum is: ' + sum);
+        let averageRating
+        if ( sum == 0) {
+            averageRating = 0
+        } else {
+            averageRating = sum / reviews.length
+            
+        }
+        
+    
+        const highlightsToReturn = salon.highLights.split(',')
+
+        var workDaysListToReturn = this.workDayStringToArray(salon.workDays)
+
+        const salonFormatted = {
+            id: salon.id,
+            salonName: salon.salonName, 
+            salonAddress: salon.salonAddress,
+            highLights: highlightsToReturn,
+            description: salon.description,
+            workDays: workDaysListToReturn,
+            reviews: reviewsToReturn,
+            salonRating: averageRating
+        }
+        // console.log("salon to return------------")
+        // console.log(salonToReturn)
+
+        return salonFormatted
+    }
+    quickSortSalonRating(arr) {
+        if (arr.length <= 1) {
+          return arr;
+        }
+      
+        let pivot = arr[0];
+        let leftArr = [];
+        let rightArr = [];
+      
+        for (let i = 1; i < arr.length; i++) {
+          if (arr[i].salonRating > pivot.salonRating) {
+            leftArr.push(arr[i]);
+          } else {
+            rightArr.push(arr[i]);
+          }
+        }
+      
+        return [...this.quickSortSalonRating(leftArr), pivot, ...this.quickSortSalonRating(rightArr)];
+      };
+    quickSortSearchScore(arr) {
+        if (arr.length <= 1) {
+          return arr;
+        }
+      
+        let pivot = arr[0];
+        let leftArr = [];
+        let rightArr = [];
+      
+        for (let i = 1; i < arr.length; i++) {
+          if (arr[i].totalSearchScore > pivot.totalSearchScore) {
+            leftArr.push(arr[i]);
+          } else {
+            rightArr.push(arr[i]);
+          }
+        }
+      
+        return [...this.quickSortSearchScore(leftArr), pivot, ...this.quickSortSearchScore(rightArr)];
+      };
     
 }
 
