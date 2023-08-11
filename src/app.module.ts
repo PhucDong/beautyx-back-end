@@ -25,6 +25,7 @@ import { ServiceService } from "./service/service.service";
 import { AppointmentModule } from './appointment/appointment.module';
 import { ReviewModule } from './review/review.module';
 import { AuthenModule } from './authen/authen.module';
+import { mysqlPort, mysqlUsername, mysqlPassword, mysqlDatabase } from "./constants";
 
 
 
@@ -34,10 +35,10 @@ import { AuthenModule } from './authen/authen.module';
   imports: [TypeOrmModule.forRoot({
     type: 'mysql',
     host:'localhost',
-    port: 3306,
-    username: 'NestjsUser',
-    password: 'Triet@23221097@',
-    database: 'beautyx',
+    port: mysqlPort,
+    username: mysqlUsername,
+    password: mysqlPassword,
+    database: mysqlDatabase,
     entities:[
       ManagerEntity, 
       CustomerEntity, 

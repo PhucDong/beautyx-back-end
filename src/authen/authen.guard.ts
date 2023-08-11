@@ -1,7 +1,6 @@
 
 import { CanActivate, ExecutionContext, Injectable, UnauthorizedException, } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { jwtConstants } from './constants';
 import { Request } from 'express';
 import { Reflector } from '@nestjs/core';
 import { ROLES_KEY, RoleEnum } from 'src/Custom Decorator/roles.decorator';
@@ -9,6 +8,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { CustomerEntity } from 'src/TypeOrms/CustomerEntity';
 import { SalonEntity } from 'src/TypeOrms/SalonEntity';
 import { Repository } from 'typeorm';
+import { jwtConstants } from 'src/constants';
   
 @Injectable()
 export class LoginGuard implements CanActivate {
@@ -70,7 +70,9 @@ export class RolesGuard implements CanActivate {
     console.log("checking user role: ")
     console.log(requiredRoles[0] == user.roles)
 
-    return requiredRoles.some((role) => user.roles?.includes(role));
+    //return requiredRoles.some((role) => user.roles?.includes(role));
+    return requiredRoles.some((role) => user.role == role);
+  
   }
 }
 
@@ -83,8 +85,7 @@ export class customerGuard implements CanActivate {
     console.log("the user in the request: " + user.sub)
     console.log("request params: " + request.params.id)
 
-   
-
     return (user.sub == request.params.id)
+
   }
 }

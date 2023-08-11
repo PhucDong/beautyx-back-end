@@ -8,6 +8,7 @@ import { SalonEntity } from 'src/TypeOrms/SalonEntity';
 @Module({
   imports: [TypeOrmModule.forFeature([ManagerEntity, SalonEntity])],
   controllers: [ManagerController],
-  providers: [ManagerService]
+  providers: [ManagerService],
+  exports: [ManagerService]
 })
 export class ManagerModule {}

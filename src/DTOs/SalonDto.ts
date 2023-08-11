@@ -1,5 +1,6 @@
 import { Type } from "class-transformer"
 import { IsArray, IsNotEmpty, IsNotEmptyObject, Matches, ValidateNested } from "class-validator"
+import { SalonTypeEnum } from "src/constants"
 
 export class createSalonDto {
 
@@ -18,6 +19,9 @@ export class createSalonDto {
 
     @IsNotEmpty()
     description: string
+
+    @IsNotEmpty()
+    salonTypes: string
 }
 
 export class updateSalonDto {
@@ -30,14 +34,21 @@ export class updateSalonDto {
 
     description: string
 
+    salonTypes: string
+
 }
 export class updateSalonHighLightsDto {
 
     @IsNotEmpty()
-    highLights: string
+    highLights: string[]
     
 }
+export class updateSalonTypesDto {
 
+    @IsNotEmpty()
+    salonTypes: SalonTypeEnum[]
+    
+}
 export class updateSalonWorkDayDto {
 
     @IsNotEmpty()

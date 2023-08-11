@@ -1,9 +1,10 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { createSalonDto, searchSalonDto, updateSalonDto, updateSalonHighLightsDto, updateSalonWorkDayDto, updateSalonWorkDayListDto } from 'src/DTOs/SalonDto';
+import { createSalonDto, searchSalonDto, updateSalonDto, updateSalonHighLightsDto, updateSalonTypesDto, updateSalonWorkDayDto, updateSalonWorkDayListDto } from 'src/DTOs/SalonDto';
 import { AppointmentEntity } from 'src/TypeOrms/AppointmentEntity';
 import { ReviewEntity } from 'src/TypeOrms/ReviewEntity';
 import { SalonEntity } from 'src/TypeOrms/SalonEntity';
+import { SalonTypeEnum } from 'src/constants';
 import { ArrayContains, In, Like, Repository } from 'typeorm';
 
 @Injectable()
@@ -14,33 +15,33 @@ export class SalonService {
         ) {}
 
     
-    async getSalons(pageSize: number, pageNumber: number){
+    async getSalons(pageSize: number, pageNumber: number, sortOption?: string){
         const salons = await this.salonRepository.find({relations: ['appointments']});
-        var salonsToReturn = []
+        
+        const salonToReturn = this.sortAndPaginateSalons(salons, pageSize, pageNumber, sortOption)
+
+        return salonToReturn
+    }
+    async getSalonsFiltered(pageSize: number, pageNumber: number, salonType: string, sortOption?: string){
+        const filterArray = salonType.split('-')
+        let filteredSalon: SalonEntity[] = []
+        const salons = await this.salonRepository.find({relations: ['appointments']});
         for (var i = 0; i < salons.length; i++){
-            
-            let salonToReturn = await this.formatSalonForDisplay(salons[i])
-            salonsToReturn.push(salonToReturn)
+            const salonTypesArray = salons[i].salonTypes.split(',')
+            console.log("filter array: " + filterArray);
+            console.log("salon type array: " + salonTypesArray)
+            if ( filterArray.some((type) => salonTypesArray.includes(type) ) ){
+                console.log("found salon type in salonTypes")
+                filteredSalon.push(salons[i])
+            }
+
         }
-        //salonsToReturn.sort((a, b) => a.salonRating + b.salonRating);
-        //console.log(foundList)
-        const sortedSalons = this.quickSortSalonRating(salonsToReturn)
 
-        var salonPage = []
-        // console.log('page number: ' + pageNumber)
-        // console.log('page size: ' + pageSize)
-        for (var pageStartIndex = (pageNumber - 1) * pageSize; pageStartIndex < pageSize * pageNumber; pageStartIndex++){
-            console.log('loop number: ' + pageStartIndex)
-            salonPage.push(sortedSalons[pageStartIndex])
-            console.log(sortedSalons[pageStartIndex].salonRating)
-        }
-        return salonPage
+        const salonToReturn = this.sortAndPaginateSalons(filteredSalon, pageSize, pageNumber, sortOption)
+
+        return salonToReturn
     }
-
-    async queryBuilder(alias: string) {
-        return this.salonRepository.createQueryBuilder(alias)
-    }
-
+    
     async getSalon(idToFind: number){
         const salon = await this.salonRepository.findOne({relations: ['appointments'], where: {id: idToFind}});
         if (!salon) throw new HttpException('the salon with the given id cannot be found', HttpStatus.NOT_FOUND)
@@ -48,7 +49,6 @@ export class SalonService {
         const salonToReturn = this.formatSalonForDisplay(salon)
 
         return salonToReturn
-        
 
     }
     async getSalonsPage(page: number, pageSize: number, keyword: string) {
@@ -65,12 +65,7 @@ export class SalonService {
             skip: (page - 1) * pageSize,
             take: pageSize,
         });
-        return {
-          list,
-          count,
-          page,
-          pageSize,
-        };
+        return { list, count, page, pageSize }
 
         //const reviews = await this.reviewRepository.find({ relations: ['appointment', 'customer'], where: {appointment: { id: In(appointmentIdList) } } })
         // const salonPage = await this.salonRepository.find({
@@ -88,93 +83,10 @@ export class SalonService {
         //         take: pageSize,
         //     });
 
-
         //     return salonPage
 
     }
       
-
-    async searchSalon(searchKey: searchSalonDto){
-        const salons = await this.salonRepository.find({relations: ['serviceCategories']});
-
-        if (searchKey.searchStr.length == 0) throw new HttpException('the search keyword cannot be empty', HttpStatus.BAD_REQUEST)
-
-        const searchKeyList = searchKey.searchStr.split(' ')
-        console.log("list of keys to find")
-        console.log(searchKeyList)
-
-            // if (!caseSensitive) {
-            //     str = str.toLowerCase();
-            //     searchStr = searchStr.toLowerCase();
-            // }
-
-        var foundList = []
-
-        for (var i = 0; i < salons.length; i++){
-            const salonToSearch = salons[i]
-            // console.log("salon being searched")
-            //console.log(salonToSearch)
-            var searchkeyFound = 0;
-            var totalSearchScore = 0;
-            for (var k = 0; k < searchKeyList.length; k++){
-                // console.log('search key loop number: ' + k)
-                const searchKey = searchKeyList[k]
-                    
-                var startIndex = 0, index: number, salonNameIndices = [], salonAddressIndices = [], salonServiceCategoryIndices = [];
-                while ((index = salonToSearch.salonName.indexOf(searchKey, startIndex)) > -1) {
-                    salonNameIndices.push(index);
-                    startIndex = index + searchKey.length;
-                }
-                
-                startIndex = 0
-                while ((index = salonToSearch.salonAddress.indexOf(searchKey, startIndex)) > -1) {
-                    salonAddressIndices.push(index);
-                    startIndex = index + searchKey.length;
-                }
-                
-                var categoryScore = 0
-                for ( var j = 0; j < salonToSearch.serviceCategories.length; j++){
-                    const categoryToSearch = salonToSearch.serviceCategories[j]
-                    var categoryStartIndex = 0, categoryIndices = []
-                    while ((index = categoryToSearch.serviceCategoryName.indexOf(searchKey, categoryStartIndex)) > -1) {
-                        categoryIndices.push(index);
-                        categoryStartIndex = index + searchKey.length;
-                    }
-                    //if (categoryIndices.length != 0) console.log('found result in service categories number: ' + j + ' -------------------')
-
-                    salonServiceCategoryIndices.push(categoryIndices)
-                    categoryScore += categoryIndices.length
-                }
-
-                // if (salonNameIndices.length != 0) console.log('found result in salon names-------')
-                // if (salonAddressIndices.length != 0) console.log('found result in salon address-------')
-                // if (categoryScore != 0) console.log('found result in salon categories-------')
-
-                const resultScore = salonNameIndices.length + salonAddressIndices.length + categoryScore
-                if (resultScore != 0) {
-                    searchkeyFound++
-                    totalSearchScore += resultScore
-                    // console.log("number of search key found: " + searchkeyFound)
-                }
-            }
-            // if (searchkeyFound == searchKeyList.length) {
-            //     // console.log('search key found match number of search key')
-            //     const salonFound = {...salonToSearch, totalSearchScore}
-            //     foundList.push(salonFound)
-                
-            // }
-            if (searchkeyFound != 0) {
-                const salonFound = {...salonToSearch, totalSearchScore}
-                foundList.push(salonFound)
-                
-            }
-        }
-
-        foundList.sort((a, b) => a.totalSearchScore + b.totalSearchScore);
-        
-        return foundList
-        
-    }
     async searchSalonQuery(searchKey: string, pageSize: number, pageNumber: number){
         const salons = await this.salonRepository.find({relations: ['serviceCategories']});
 
@@ -253,15 +165,10 @@ export class SalonService {
         foundList.sort((a, b) => a.totalSearchScore + b.totalSearchScore);
         const foundListSorted = this.quickSortSearchScore(foundList)
         //console.log(foundList)
-        var salonPage = []
-        console.log('page number: ' + pageNumber)
-        console.log('page size: ' + pageSize)
-        for (var pageStartIndex = (pageNumber - 1) * pageSize; pageStartIndex < pageSize * pageNumber; pageStartIndex++){
-            console.log('loop number: ' + pageStartIndex)
-            salonPage.push(foundListSorted[pageStartIndex])
-        }
-        //console.log(salonPage)
-        return salonPage
+
+        const pageToReturn = this.customPagination(foundListSorted, pageSize, pageNumber)
+        
+        return pageToReturn
         
     }
 
@@ -288,8 +195,12 @@ export class SalonService {
         if (workDays.charAt(workDays.length - 1) == ','){
             workDays = workDays.substring(0, workDays.length - 1)
         }
-        
-        const salonToSave = this.salonRepository.create({...newSalon, workDays});
+        var salonTypes = ''
+        for (var i = 0; i < newSalon.salonTypes.length; i++) {
+            const currentType = newSalon.salonTypes[i]
+            salonTypes += currentType
+        }
+        const salonToSave = this.salonRepository.create({...newSalon, workDays, salonTypes});
         
         return this.salonRepository.save(salonToSave)
     }
@@ -301,22 +212,54 @@ export class SalonService {
     async updateSalonHighLights(idToUpdate: number, updateDetails: updateSalonHighLightsDto){
         const salonToUpdate = await this.salonRepository.findOne({where: {id: idToUpdate}})
         if (!salonToUpdate) throw new HttpException('the salon with the given id cannot be found to update it\'s highlights', HttpStatus.NOT_FOUND)
-        
-        const indexToFind = salonToUpdate.highLights.indexOf(updateDetails.highLights)
-        if (indexToFind == -1){
-            if (salonToUpdate.highLights == ''){
-                salonToUpdate.highLights = updateDetails.highLights
+        for ( var i = 0; i < updateDetails.highLights.length; i++ ){
+            const currentHighLight = updateDetails.highLights[i]
+            const indexToFind = salonToUpdate.highLights.indexOf(currentHighLight)
+            if (indexToFind == -1){
+                if (salonToUpdate.highLights == ''){
+                    salonToUpdate.highLights = currentHighLight
+                } else {
+                    salonToUpdate.highLights = salonToUpdate.highLights + ',' + currentHighLight
+                }
             } else {
-                salonToUpdate.highLights = salonToUpdate.highLights + ',' + updateDetails.highLights
-            }
-        } else {
-            const leftString = salonToUpdate.highLights.substring(0, indexToFind);
-            const rightString = salonToUpdate.highLights.substring(indexToFind + updateDetails.highLights.length + 1);
-            salonToUpdate.highLights = leftString + rightString
-            if (salonToUpdate.highLights.charAt(salonToUpdate.highLights.length - 1) == ','){
-                salonToUpdate.highLights = salonToUpdate.highLights.substring(0, salonToUpdate.highLights.length - 1)
-            }
+                const leftString = salonToUpdate.highLights.substring(0, indexToFind);
+                const rightString = salonToUpdate.highLights.substring(indexToFind + currentHighLight.length + 1);
+                salonToUpdate.highLights = leftString + rightString
+                if (salonToUpdate.highLights.charAt(salonToUpdate.highLights.length - 1) == ','){
+                    salonToUpdate.highLights = salonToUpdate.highLights.substring(0, salonToUpdate.highLights.length - 1)
+                }
 
+            }
+        }
+        
+        return this.salonRepository.save(salonToUpdate);
+
+    }
+    async updateSalonTypes(idToUpdate: number, updateDetails: updateSalonTypesDto){
+        const salonToUpdate = await this.salonRepository.findOne({where: {id: idToUpdate}})
+        if (!salonToUpdate) throw new HttpException('the salon with the given id cannot be found to update it\'s salon type', HttpStatus.NOT_FOUND)
+
+        for (var i = 0; i < updateDetails.salonTypes.length; i++ ){
+            const currentType = updateDetails.salonTypes[i]
+            // console.log("the current type is: " + currentType)
+            const indexToFind = salonToUpdate.salonTypes.indexOf(currentType)
+            if (indexToFind == -1){
+                if (salonToUpdate.salonTypes == ''){
+                    salonToUpdate.salonTypes = currentType
+                } else {
+                    salonToUpdate.salonTypes = salonToUpdate.salonTypes + ',' + currentType
+                }
+            } else {
+                const leftString = salonToUpdate.salonTypes.substring(0, indexToFind);
+                const rightString = salonToUpdate.salonTypes.substring(indexToFind + currentType.length + 1);
+                console.log("left: " + leftString)
+                console.log("right: " + rightString)
+                salonToUpdate.salonTypes = leftString + rightString
+                if (salonToUpdate.salonTypes.charAt(salonToUpdate.salonTypes.length - 1) == ','){
+                    salonToUpdate.salonTypes = salonToUpdate.salonTypes.substring(0, salonToUpdate.salonTypes.length - 1)
+                }
+    
+            }
         }
         return this.salonRepository.save(salonToUpdate);
 
@@ -331,64 +274,32 @@ export class SalonService {
         // if (timeFormat.test(startTime) == false) throw new HttpException("the start time format is incorrect, please enter the time by this format: hh:mm:ss", HttpStatus.BAD_REQUEST)
         // if (timeFormat.test(endTime) == false) throw new HttpException("the end time format is incorrect, please enter the time by this format: hh:mm:ss", HttpStatus.BAD_REQUEST)
         
-        const workDayStr = updateDetails.workDay + '-' + updateDetails.startTime + '-' + updateDetails.endTime
-        const indexToFind = salonToUpdate.workDays.indexOf(updateDetails.workDay)
-        if (indexToFind == -1){
-            if (salonToUpdate.workDays == ''){
-                salonToUpdate.workDays = workDayStr
-            } else {
-                salonToUpdate.workDays = salonToUpdate.workDays + ',' + workDayStr
-            }
-        } else {
-            const leftString = salonToUpdate.workDays.substring(0, indexToFind);
-            const rightString = salonToUpdate.workDays.substring(indexToFind + workDayStr.length + 1);
-            salonToUpdate.workDays = leftString + workDayStr + ',' + rightString
-            if (salonToUpdate.workDays.charAt(salonToUpdate.workDays.length - 1) == ','){
-                salonToUpdate.workDays = salonToUpdate.workDays.substring(0, salonToUpdate.workDays.length - 1)
-            }
-
-        }
-        return this.salonRepository.save(salonToUpdate);
+        const salonUpdated = this.updateWorkDay(salonToUpdate, updateDetails)
+        return this.salonRepository.save(salonUpdated);
 
     }
+    
     async updateSalonWorkDayList(idToUpdate: number, updateDetails: updateSalonWorkDayListDto){
         const salonToUpdate = await this.salonRepository.findOne({where: {id: idToUpdate}})
         if (!salonToUpdate) throw new HttpException('the salon with the given id cannot be found to update it\'s workday', HttpStatus.NOT_FOUND)
-
-        // var [day, startTime, endTime] = updateDetails.workDay.split('-')
-        // var timeFormat: RegExp = /^([0-1]?[0-9]|2?[0-4]):([0-5]?[0-9]):([0-5]?[0-9])$/;
-
-        // if (timeFormat.test(startTime) == false) throw new HttpException("the start time format is incorrect, please enter the time by this format: hh:mm:ss", HttpStatus.BAD_REQUEST)
-        // if (timeFormat.test(endTime) == false) throw new HttpException("the end time format is incorrect, please enter the time by this format: hh:mm:ss", HttpStatus.BAD_REQUEST)
+        let salonUpdated: SalonEntity
         for (var i = 0; i < updateDetails.workDayList.length; i++ ){
             const currentWorkDay = updateDetails.workDayList[i]
-            const workDayStr = currentWorkDay.workDay + '-' + currentWorkDay.startTime + '-' + currentWorkDay.endTime
-            const indexToFind = salonToUpdate.workDays.indexOf(currentWorkDay.workDay)
-            if (indexToFind == -1){
-                if (salonToUpdate.workDays == ''){
-                    salonToUpdate.workDays = workDayStr
-                } else {
-                    salonToUpdate.workDays = salonToUpdate.workDays + ',' + workDayStr
-                }
-            } else {
-                const leftString = salonToUpdate.workDays.substring(0, indexToFind);
-                const rightString = salonToUpdate.workDays.substring(indexToFind + workDayStr.length + 1);
-                salonToUpdate.workDays = leftString + workDayStr + ',' + rightString
-                if (salonToUpdate.workDays.charAt(salonToUpdate.workDays.length - 1) == ','){
-                    salonToUpdate.workDays = salonToUpdate.workDays.substring(0, salonToUpdate.workDays.length - 1)
-                }
-    
-            }
+            salonUpdated = this.updateWorkDay(salonToUpdate, currentWorkDay)
+
         }
         
-        return this.salonRepository.save(salonToUpdate);
+        return this.salonRepository.save(salonUpdated);
 
     }
+    
     deleteSalon(idToDelete: number){
         return this.salonRepository.delete( idToDelete)
 
     }
-  
+
+  /////////////// utility functions ///////////////
+
     workDayStringToArray(workDayStr: string){
         const workDaysList = workDayStr.split(',')
         var workDaysListToReturn = []
@@ -402,6 +313,7 @@ export class SalonService {
         }
         return workDaysListToReturn
     }
+
     async formatSalonForDisplay(salon) {
         console.log("current salon: " + salon.salonName)
         let appointmentIdList: number[] = []
@@ -419,7 +331,7 @@ export class SalonService {
         var reviewsToReturn = []
         let sum = 0
         for (var j = 0; j < reviews.length; j++){
-            console.log('review number: ' + j)
+            // console.log('review number: ' + j)
             const reviewFormated = {
                 rating: reviews[j].rating,
                 comment: reviews[j].comment,
@@ -429,7 +341,7 @@ export class SalonService {
             reviewsToReturn.push(reviewFormated)
         }
         
-        console.log('sum is: ' + sum);
+        // console.log('sum is: ' + sum);
         let averageRating
         if ( sum == 0) {
             averageRating = 0
@@ -438,16 +350,18 @@ export class SalonService {
             
         }
         
-    
         const highlightsToReturn = salon.highLights.split(',')
-
-        var workDaysListToReturn = this.workDayStringToArray(salon.workDays)
-
+        console.log("salon types in database: " + salon.salonTypes)
+        const salonTypesToReturn = salon.salonTypes.split(',') 
+        
+        const workDaysListToReturn = this.workDayStringToArray(salon.workDays)
+        
         const salonFormatted = {
             id: salon.id,
             salonName: salon.salonName, 
             salonAddress: salon.salonAddress,
             highLights: highlightsToReturn,
+            salonTypes: salonTypesToReturn,
             description: salon.description,
             workDays: workDaysListToReturn,
             reviews: reviewsToReturn,
@@ -457,6 +371,57 @@ export class SalonService {
         // console.log(salonToReturn)
 
         return salonFormatted
+    }
+    async sortAndPaginateSalons(salons, pageSize:number, pageNumber: number, sortOption?: string){
+        var formattedSalons = []
+        for (var i = 0; i < salons.length; i++){
+            let salonToReturn = await this.formatSalonForDisplay(salons[i])
+            formattedSalons.push(salonToReturn)
+        }
+        //salonsToReturn.sort((a, b) => a.salonRating + b.salonRating);
+        //console.log(foundList)
+        let sortedSalons = []
+        if (sortOption == 'alphabetical') {
+            sortedSalons = this.quickSortSalonName(formattedSalons)
+        } else {
+            sortedSalons = this.quickSortSalonRating(formattedSalons)
+        }
+        
+        const pageToReturn = this.customPagination(sortedSalons, pageSize, pageNumber)
+
+        return pageToReturn
+    }
+    customPagination(salons, pageSize: number, pageNumber: number){
+        // console.log('page number: ' + pageNumber)
+        // console.log('page size: ' + pageSize)
+        var salonPage = []
+        for (var pageStartIndex = (pageNumber - 1) * pageSize; pageStartIndex < pageSize * pageNumber; pageStartIndex++){
+            // console.log('loop number: ' + pageStartIndex)
+            salonPage.push(salons[pageStartIndex])
+            // console.log(salonList[pageStartIndex].salonRating)
+        }
+        return salonPage
+    } 
+    updateWorkDay(salonToUpdate: SalonEntity, currentWorkDay){
+
+        const workDayStr = currentWorkDay.workDay + '-' + currentWorkDay.startTime + '-' + currentWorkDay.endTime
+        const indexToFind = salonToUpdate.workDays.indexOf(currentWorkDay.workDay)
+        if (indexToFind == -1){
+            if (salonToUpdate.workDays == ''){
+                salonToUpdate.workDays = workDayStr
+            } else {
+                salonToUpdate.workDays = salonToUpdate.workDays + ',' + workDayStr
+            }
+            } else {
+                const leftString = salonToUpdate.workDays.substring(0, indexToFind);
+                const rightString = salonToUpdate.workDays.substring(indexToFind + workDayStr.length + 1);
+                salonToUpdate.workDays = leftString + rightString
+                if (salonToUpdate.workDays.charAt(salonToUpdate.workDays.length - 1) == ','){
+                    salonToUpdate.workDays = salonToUpdate.workDays.substring(0, salonToUpdate.workDays.length - 1)
+                }
+    
+            }
+        return salonToUpdate
     }
     quickSortSalonRating(arr) {
         if (arr.length <= 1) {
@@ -476,7 +441,26 @@ export class SalonService {
         }
       
         return [...this.quickSortSalonRating(leftArr), pivot, ...this.quickSortSalonRating(rightArr)];
-      };
+      }
+      quickSortSalonName(arr) {
+        if (arr.length <= 1) {
+          return arr;
+        }
+      
+        let pivot = arr[0];
+        let leftArr = [];
+        let rightArr = [];
+      
+        for (let i = 1; i < arr.length; i++) {
+          if (arr[i].salonName > pivot.salonName) {
+            leftArr.push(arr[i]);
+          } else {
+            rightArr.push(arr[i]);
+          }
+        }
+      
+        return [...this.quickSortSalonName(leftArr), pivot, ...this.quickSortSalonName(rightArr)];
+      }
     quickSortSearchScore(arr) {
         if (arr.length <= 1) {
           return arr;

@@ -83,7 +83,7 @@ export abstract class Profile {
         type: 'enum',
         enum: RoleEnum,
     })
-    roles: RoleEnum[];
+    role: RoleEnum;
    
 
 }

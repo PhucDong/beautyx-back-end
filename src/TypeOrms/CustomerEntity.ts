@@ -34,11 +34,6 @@ export class CustomerEntity extends Profile{
     })
     password: string
 
-    @Column({
-        type: 'enum',
-        enum: RoleEnum,
-        default: RoleEnum.Customer
-    })
-    roles: RoleEnum[];
+
 
 }

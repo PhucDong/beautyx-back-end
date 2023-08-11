@@ -39,15 +39,15 @@ export class CustomerService {
     }
     createCustomer(newCustomer: createCustomerDto){
         const password = passwordToHash(newCustomer.password)
-        const roles = [RoleEnum.Customer]
-        const customerToSave = this.customerRepository.create({...newCustomer, password, roles});
+        const role = RoleEnum.Customer
+        const customerToSave = this.customerRepository.create({...newCustomer, password, role});
         return this.customerRepository.save(customerToSave)
     }
 
     registerCustomer(newCustomer: registerCustomerDto){
         const password = passwordToHash(newCustomer.password)
-        const roles = [RoleEnum.Customer]
-        const customerToSave = this.customerRepository.create({...newCustomer, password, roles});
+        const role = RoleEnum.Customer
+        const customerToSave = this.customerRepository.create({...newCustomer, password, role});
         return this.customerRepository.save(customerToSave)
     }
 

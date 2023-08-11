@@ -5,6 +5,7 @@ import { InventoryEntity } from "./InventoryEntity";
 import { ManagerEntity } from "./ManagerEntity";
 import { ServiceCategoryEntity } from "./ServiceCategoryEntity";
 import { ReviewEntity } from "./ReviewEntity";
+import { SalonTypeEnum } from "src/constants";
 
 
 @Entity()
@@ -29,6 +30,10 @@ export class SalonEntity {
     @Column()
     description: string
 
+    @Column()
+    salonTypes: string;
+
+    
     @OneToMany(() => ServiceCategoryEntity, (serivceCategories) => serivceCategories.salon)
     serviceCategories: ServiceCategoryEntity[]
 

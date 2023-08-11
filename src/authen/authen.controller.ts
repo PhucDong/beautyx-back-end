@@ -12,6 +12,11 @@ export class AuthenController {
     customerLogin(@Body() loginDetails: loginDto) {
       return this.authenService.customerLogin(loginDetails);
     }
+    
+    @Post('manager/login')
+    managerLogin(@Body() loginDetails: loginDto) {
+      return this.authenService.managerLogin(loginDetails);
+    }
 
     @UseGuards(LoginGuard)
     @Get('profile')
