@@ -1,8 +1,11 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { registerDto } from 'src/DTOs/AuthenDto';
 import { createManagerDto } from 'src/DTOs/ManagerDto';
 import { ManagerEntity } from 'src/TypeOrms/ManagerEntity';
 import { SalonEntity } from 'src/TypeOrms/SalonEntity';
+import { passwordToHash } from 'src/authen/bcrypt';
+import { RoleEnum } from 'src/constants';
 import { Repository } from 'typeorm';
 
 @Injectable()
@@ -43,7 +46,12 @@ export class ManagerService {
 
         return savedManager
     }
-
+    registerManager(newCustomer: registerDto){
+        const password = passwordToHash(newCustomer.password)
+        const role = RoleEnum.Manager
+        const managerToSave = this.managerRepository.create({...newCustomer, password, role});
+        return this.managerRepository.save(managerToSave)
+    }
     updateManager(idToUpdate: number, updateDetails: createManagerDto){
         return this.managerRepository.update( idToUpdate, {...updateDetails})
 

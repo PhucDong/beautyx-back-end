@@ -1,6 +1,7 @@
 import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, UsePipes, ValidationPipe } from '@nestjs/common';
 import { ManagerService } from './manager.service';
 import { createManagerDto } from 'src/DTOs/ManagerDto';
+import { registerDto } from 'src/DTOs/AuthenDto';
 
 
 @Controller('manager')
@@ -25,6 +26,12 @@ export class ManagerController {
     @UsePipes(ValidationPipe)
     createManager(@Param('id', ParseIntPipe) salonId: number, @Body() newManager: createManagerDto){
         return this.managerService.createManager(salonId, newManager)
+    }
+    @Post('register')
+    @UsePipes(ValidationPipe)
+    registerManager(@Body() newCustomer: registerDto){
+        console.log('registering customer')
+        return this.managerService.registerManager(newCustomer)
     }
     
     @Put('update/id/:id')

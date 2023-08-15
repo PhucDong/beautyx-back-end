@@ -1,8 +1,8 @@
 import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
 import { CustomerService } from './customer.service';
 import { createCustomerDto, updateCustomerDto, updateFavoriteSalonDto } from 'src/DTOs/CustomerDto';
-import { registerCustomerDto } from 'src/DTOs/AuthenDto';
 import { LoginGuard, customerGuard } from 'src/authen/authen.guard';
+import { registerDto } from 'src/DTOs/AuthenDto';
 
 @Controller('customer')
 export class CustomerController {
@@ -35,7 +35,7 @@ export class CustomerController {
 
     @Post('register')
     @UsePipes(ValidationPipe)
-    registerCustomer(@Body() newCustomer: registerCustomerDto){
+    registerCustomer(@Body() newCustomer: registerDto){
         console.log('registering customer')
         return this.customerService.registerCustomer(newCustomer)
     }
