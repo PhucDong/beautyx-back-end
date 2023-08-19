@@ -13,7 +13,7 @@ export class CustomerController {
         const customers = await this.customerService.getCustomers();
         return customers
     }
-    @UseGuards(LoginGuard, customerGuard)
+    //@UseGuards(LoginGuard, customerGuard)
     @Get('id/:id')
     getCustomer(@Param('id', ParseIntPipe) idToFind: number){
         return this.customerService.getCustomer(idToFind);
@@ -33,12 +33,7 @@ export class CustomerController {
         return this.customerService.createCustomer(newCustomer)
     }
 
-    @Post('register')
-    @UsePipes(ValidationPipe)
-    registerCustomer(@Body() newCustomer: registerDto){
-        console.log('registering customer')
-        return this.customerService.registerCustomer(newCustomer)
-    }
+    
     @Put('update/id/:id')
     @UsePipes(ValidationPipe)
     async updateCustomer(@Param('id', ParseIntPipe) idToUpdate: number, @Body() updateDetails: updateCustomerDto){

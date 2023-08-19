@@ -1,9 +1,9 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { createEmployeeDto, getEmployeesAvailableDto, updateEmployeeDto, updateEmployeeWorkDayDto, updateEmployeeWorkDayListDto } from 'src/DTOs/EmployeeDto';
-import { ApprovalStatusEnum } from 'src/TypeOrms/AppointmentEntity';
 import { EmployeeEntity } from 'src/TypeOrms/EmployeeEntity';
 import { SalonEntity } from 'src/TypeOrms/SalonEntity';
+import { ApprovalStatusEnum } from 'src/constants';
 import { Repository } from 'typeorm';
 
 @Injectable()
@@ -52,8 +52,13 @@ export class EmployeeService {
         return employee.appointments
      }
  
-    async getEmployeesAvailable(salonId: number, appointmentTime: getEmployeesAvailableDto){
-
+    async getEmployeesAvailable(getParams: getEmployeesAvailableDto){
+        const salonId = getParams.salonId
+        const appointmentTime = {
+            appointmentDate: getParams.appointmentDate,
+            startTime: getParams.startTime,
+            estimatedEndTime: getParams.estimatedEndTime
+        }
         const salonToFind = await this.salonRepository.findOne({where: {id: salonId}})
         if (!salonToFind) throw new HttpException('the salon with the given id cannot be found to get it\'s list of available employee', HttpStatus.NOT_FOUND)
 
@@ -62,41 +67,43 @@ export class EmployeeService {
             //where: {salon: salonToFind}
             where: { salon: {id: salonToFind.id} }
         })
-        // console.log('list of employees belonging to the salon')
-        // console.log(employees)
+        console.log('list of employees belonging to the salon')
+        console.log(employees)
+    
         if (employees.length == 0) {
             throw new HttpException('the salon has no employee assigned to it', HttpStatus.NO_CONTENT)
         }
         let availableEmployees: EmployeeEntity[] = [];
         
         for (var i = 0; i < employees.length; i++){
-            const employeeChecking = employees[i];
-
+            const employeeBeingChecked = employees[i];
+            console.log("checking an employee")
             var availability: Boolean = true;
 
-            for (var j = 0; j < employeeChecking.appointments.length; j++){
-                if(employeeChecking.appointments[j].approvalStatus == ApprovalStatusEnum.APPROVED){
+            for (var j = 0; j < employeeBeingChecked.appointments.length; j++){
+                console.log("checking an employee appointments")
+                if(employeeBeingChecked.appointments[j].approvalStatus == ApprovalStatusEnum.APPROVED){
                     const dateToCheck = new Date(appointmentTime.appointmentDate)
-                    const dateAssigned = employeeChecking.appointments[j].appointmentDate
+                    const dateAssigned = employeeBeingChecked.appointments[j].appointmentDate
 
-                    // console.log('date of appointment assigned: ' + dateAssigned)
-                    // console.log('date of appointment to check: ' + dateToCheck)
+                    console.log('date of appointment assigned: ' + dateAssigned)
+                    console.log('date of appointment to check: ' + dateToCheck)
                  
                     if(dateAssigned.getFullYear() != dateToCheck.getFullYear() 
                     || dateAssigned.getMonth() != dateToCheck.getMonth() 
                     || dateAssigned.getDate() != dateToCheck.getDate() 
                     ){
-                        // console.log('appointment not on the same date-------------------')
+                        console.log('appointment not on the same date-------------------')
                         continue
                     } else {
 
-                        // console.log('time of appointment assigned: ' + employeeChecking.appointments[j].startTime + ' to ' + employeeChecking.appointments[j].estimatedEndTime)
-                        // console.log('time of appointment to check: ' + appointmentTime.startTime + ' to ' + appointmentTime.estimatedEndTime)
+                        console.log('time of appointment assigned: ' + employeeBeingChecked.appointments[j].startTime + ' to ' + employeeBeingChecked.appointments[j].estimatedEndTime)
+                        console.log('time of appointment to check: ' + appointmentTime.startTime + ' to ' + appointmentTime.estimatedEndTime)
 
-                        if ( (appointmentTime.startTime >= employeeChecking.appointments[j].startTime && appointmentTime.startTime <= employeeChecking.appointments[j].estimatedEndTime)
-                            || (appointmentTime.estimatedEndTime >= employeeChecking.appointments[j].startTime && appointmentTime.estimatedEndTime <= employeeChecking.appointments[j].estimatedEndTime) 
-                            || (appointmentTime.startTime <= employeeChecking.appointments[j].startTime && appointmentTime.estimatedEndTime >= employeeChecking.appointments[j].estimatedEndTime)) {
-                                // console.log("overlapping appointment found---------------------")
+                        if ( (appointmentTime.startTime >= employeeBeingChecked.appointments[j].startTime && appointmentTime.startTime <= employeeBeingChecked.appointments[j].estimatedEndTime)
+                            || (appointmentTime.estimatedEndTime >= employeeBeingChecked.appointments[j].startTime && appointmentTime.estimatedEndTime <= employeeBeingChecked.appointments[j].estimatedEndTime) 
+                            || (appointmentTime.startTime <= employeeBeingChecked.appointments[j].startTime && appointmentTime.estimatedEndTime >= employeeBeingChecked.appointments[j].estimatedEndTime)) {
+                                console.log("overlapping appointment found---------------------")
                                 availability = false;
                                 break;
                             }
@@ -105,8 +112,8 @@ export class EmployeeService {
 
             }
             if (availability == true){
-                // console.log('current employee added to available list')
-                availableEmployees.push(employeeChecking)
+                console.log('current employee added to available list')
+                availableEmployees.push(employeeBeingChecked)
             }
             
         }
@@ -149,7 +156,7 @@ export class EmployeeService {
         var workDays = ''
         for (var i = 0; i < newEmployee.workDays.length; i++){
             const currentWorkDay = newEmployee.workDays[i]
-            workDays += currentWorkDay.workDay + '-' + currentWorkDay.startTime + '-' +currentWorkDay.endTime + ','
+            workDays += currentWorkDay.workDay + '-' + currentWorkDay.startTime + '-' + currentWorkDay.endTime + ','
         }
 
         if (workDays.charAt(workDays.length - 1) == ','){
@@ -177,8 +184,33 @@ export class EmployeeService {
         // if (timeFormat.test(startTime) == false) throw new HttpException("the start time format is incorrect, please enter the time by this format: hh:mm:ss", HttpStatus.BAD_REQUEST)
         // if (timeFormat.test(endTime) == false) throw new HttpException("the end time format is incorrect, please enter the time by this format: hh:mm:ss", HttpStatus.BAD_REQUEST)
         
-        const workDayStr = updateDetails.workDay + '-' + updateDetails.startTime + '-' + updateDetails.endTime
-        const indexToFind = employeeToUpdate.workDays.indexOf(updateDetails.workDay)
+        const employeeUpdated = this.updateWorkDay(employeeToUpdate, updateDetails)
+
+        return this.employeeRepository.save(employeeToUpdate);
+
+    }
+    async updateEmployeeWorkDayList(idToUpdate: number, updateDetails: updateEmployeeWorkDayListDto){
+        const employeeToUpdate = await this.employeeRepository.findOne({where: {id: idToUpdate}})
+        if (!employeeToUpdate) throw new HttpException('the employee with the given id cannot be found to update the workday', HttpStatus.NOT_FOUND)
+        let employeeUpdated: EmployeeEntity
+        for (var i = 0; i < updateDetails.workDayList.length; i++){
+            const currentWorkDay = updateDetails.workDayList[i]
+            employeeUpdated = this.updateWorkDay(employeeToUpdate, currentWorkDay)
+        }
+        
+        return this.employeeRepository.save(employeeUpdated);
+
+    }
+    
+    deleteEmployee(idToDelete: number){
+        return this.employeeRepository.delete( idToDelete)
+
+    }
+    
+    updateWorkDay(employeeToUpdate: EmployeeEntity, currentWorkDay){
+        const workDayStr = currentWorkDay.workDay + '-' + currentWorkDay.startTime + '-' + currentWorkDay.endTime
+        const indexToFind = employeeToUpdate.workDays.indexOf(currentWorkDay.workDay)
+
         if (indexToFind == -1){
             if (employeeToUpdate.workDays == ''){
                 employeeToUpdate.workDays = workDayStr
@@ -188,53 +220,13 @@ export class EmployeeService {
         } else {
             const leftString = employeeToUpdate.workDays.substring(0, indexToFind);
             const rightString = employeeToUpdate.workDays.substring(indexToFind + workDayStr.length + 1);
-            employeeToUpdate.workDays = leftString + workDayStr + ',' + rightString
+            employeeToUpdate.workDays = leftString + ',' + rightString
             if (employeeToUpdate.workDays.charAt(employeeToUpdate.workDays.length - 1) == ','){
                 employeeToUpdate.workDays = employeeToUpdate.workDays.substring(0, employeeToUpdate.workDays.length - 1)
             }
 
         }
-        return this.employeeRepository.save(employeeToUpdate);
-
+        return employeeToUpdate
     }
-    async updateEmployeeWorkDayList(idToUpdate: number, updateDetails: updateEmployeeWorkDayListDto){
-        const employeeToUpdate = await this.employeeRepository.findOne({where: {id: idToUpdate}})
-        if (!employeeToUpdate) throw new HttpException('the employee with the given id cannot be found to update the workday', HttpStatus.NOT_FOUND)
-
-        // var [day, startTime, endTime] = updateDetails.workDay.split('-')
-        // var timeFormat: RegExp = /^([0-1]?[0-9]|2?[0-4]):([0-5]?[0-9]):([0-5]?[0-9])$/;
-
-        // if (timeFormat.test(startTime) == false) throw new HttpException("the start time format is incorrect, please enter the time by this format: hh:mm:ss", HttpStatus.BAD_REQUEST)
-        // if (timeFormat.test(endTime) == false) throw new HttpException("the end time format is incorrect, please enter the time by this format: hh:mm:ss", HttpStatus.BAD_REQUEST)
-        for (var i = 0; i < updateDetails.workDayList.length; i++){
-            const currentWorkDay = updateDetails.workDayList[i]
-            const workDayStr = currentWorkDay.workDay + '-' + currentWorkDay.startTime + '-' + currentWorkDay.endTime
-            const indexToFind = employeeToUpdate.workDays.indexOf(currentWorkDay.workDay)
-            if (indexToFind == -1){
-                if (employeeToUpdate.workDays == ''){
-                    employeeToUpdate.workDays = workDayStr
-                } else {
-                    employeeToUpdate.workDays = employeeToUpdate.workDays + ',' + workDayStr
-                }
-            } else {
-                const leftString = employeeToUpdate.workDays.substring(0, indexToFind);
-                const rightString = employeeToUpdate.workDays.substring(indexToFind + workDayStr.length + 1);
-                employeeToUpdate.workDays = leftString + workDayStr + ',' + rightString
-                if (employeeToUpdate.workDays.charAt(employeeToUpdate.workDays.length - 1) == ','){
-                    employeeToUpdate.workDays = employeeToUpdate.workDays.substring(0, employeeToUpdate.workDays.length - 1)
-                }
-    
-            }
-        }
-
-        
-        return this.employeeRepository.save(employeeToUpdate);
-
-    }
-    deleteEmployee(idToDelete: number){
-        return this.employeeRepository.delete( idToDelete)
-
-    }
-
 
 }

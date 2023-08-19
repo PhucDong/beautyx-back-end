@@ -4,14 +4,9 @@ import { EmployeeEntity } from "./EmployeeEntity";
 import { SalonEntity } from "./SalonEntity";
 import { ServiceEntity } from "./ServiceEntity";
 import { ReviewEntity } from "./ReviewEntity";
+import { ApprovalStatusEnum } from "src/constants";
 
-export enum ApprovalStatusEnum {
-    APPROVED = 'approved',
-    DENIED = 'denied',
-    PENDING = 'pending',
-    COMPLETED = 'completed',
-    CANCELLED = 'cancelled'
-  }
+
 
 @Entity()
 export class AppointmentEntity {

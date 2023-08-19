@@ -23,16 +23,11 @@ export class ManagerService {
         if (!manager) throw new HttpException('manager with the given id cannot be found', HttpStatus.NOT_FOUND)
         return manager
     }
-    async getManagerByEmail(emailToFind: string){
-        const manager = await this.managerRepository.findOneBy({email: emailToFind})
-        if (!manager) throw new HttpException('manager with the given email cannot be found', HttpStatus.NOT_FOUND)
-        
-        return manager
-    }
+    
     async createManager(salonId: number, newManager: createManagerDto){
         
         const salonToUpdate = await this.salonRepository.findOneBy({id: salonId})
-        if (!salonToUpdate) throw new HttpException('salon cannot be found to add new employee', HttpStatus.NOT_FOUND)
+        if (!salonToUpdate) throw new HttpException('salon cannot be found to assign new manager', HttpStatus.NOT_FOUND)
         
         const managerToSave = this.managerRepository.create({...newManager});
         // console.log('this is the manager-------------created');
@@ -46,12 +41,7 @@ export class ManagerService {
 
         return savedManager
     }
-    registerManager(newCustomer: registerDto){
-        const password = passwordToHash(newCustomer.password)
-        const role = RoleEnum.Manager
-        const managerToSave = this.managerRepository.create({...newCustomer, password, role});
-        return this.managerRepository.save(managerToSave)
-    }
+    
     updateManager(idToUpdate: number, updateDetails: createManagerDto){
         return this.managerRepository.update( idToUpdate, {...updateDetails})
 
@@ -60,5 +50,10 @@ export class ManagerService {
         return this.managerRepository.delete( idToDelete)
 
     }
-
+    async getManagerByEmail(emailToFind: string){
+        const manager = await this.managerRepository.findOneBy({email: emailToFind})
+        if (!manager) throw new HttpException('manager with the given email cannot be found', HttpStatus.NOT_FOUND)
+        
+        return manager
+    }
 }

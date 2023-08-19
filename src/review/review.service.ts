@@ -35,7 +35,7 @@ export class ReviewService {
             where: { id: customerId },
             relations: { reviews: true },
         })
-        if (!customerToReview) throw new HttpException('customer cannot be found to book new appointment', HttpStatus.NOT_FOUND)
+        if (!customerToReview) throw new HttpException('customer cannot be found to make a review', HttpStatus.NOT_FOUND)
 
         const reviewToSave = this.reviewRepository.create({...newReview});
         const savedReview = await this.reviewRepository.save(reviewToSave)

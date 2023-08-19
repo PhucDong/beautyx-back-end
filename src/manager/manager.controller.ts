@@ -27,12 +27,7 @@ export class ManagerController {
     createManager(@Param('id', ParseIntPipe) salonId: number, @Body() newManager: createManagerDto){
         return this.managerService.createManager(salonId, newManager)
     }
-    @Post('register')
-    @UsePipes(ValidationPipe)
-    registerManager(@Body() newCustomer: registerDto){
-        console.log('registering customer')
-        return this.managerService.registerManager(newCustomer)
-    }
+    
     
     @Put('update/id/:id')
     @UsePipes(ValidationPipe)

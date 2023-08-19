@@ -9,6 +9,7 @@ import { CustomerEntity } from 'src/TypeOrms/CustomerEntity';
 import { SalonEntity } from 'src/TypeOrms/SalonEntity';
 import { Repository } from 'typeorm';
 import { jwtConstants } from 'src/constants';
+import { AuthGuard } from '@nestjs/passport';
   
 @Injectable()
 export class LoginGuard implements CanActivate {
@@ -89,3 +90,8 @@ export class customerGuard implements CanActivate {
 
   }
 }
+@Injectable()
+export class LocalAuthenGuard extends AuthGuard('local') {}
+
+@Injectable()
+export default class JwtAuthenGuard extends AuthGuard('jwt') {}

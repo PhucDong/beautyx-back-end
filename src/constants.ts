@@ -26,3 +26,10 @@ export enum GenderEnum {
   FEMALE = 'female',
   OTHERS = 'others'
 }
+export enum ApprovalStatusEnum {
+  APPROVED = 'approved',
+  DENIED = 'denied',
+  PENDING = 'pending',
+  COMPLETED = 'completed',
+  CANCELLED = 'cancelled'
+}

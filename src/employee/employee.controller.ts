@@ -22,10 +22,11 @@ export class EmployeeController {
     }
  
 
-    @Get('available/salon/id/:salonId')
+    @Get('available/salon/id/:salonId/date/:appointmentDate/start/:startTime/end/:estimatedEndTime')
     @UsePipes(ValidationPipe)
-    getEmployeesAvailable(@Param('salonId', ParseIntPipe) salonId: number, @Body() appointmentTime: getEmployeesAvailableDto){
-        return this.employeeService.getEmployeesAvailable(salonId, appointmentTime);
+    getEmployeesAvailable(@Param() params: getEmployeesAvailableDto){
+    
+        return this.employeeService.getEmployeesAvailable(params);
     }
 
     

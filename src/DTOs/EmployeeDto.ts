@@ -1,5 +1,5 @@
 import { Type } from "class-transformer"
-import { IsDateString, IsEmail, IsEnum, IsNotEmpty, IsNotEmptyObject, IsNumber, IsNumberString, Matches, ValidateNested } from "class-validator"
+import { IsDateString, IsEmail, IsEnum, IsNotEmpty, IsNotEmptyObject, IsNumber, IsNumberString, Matches, ValidateNested, isNumberString } from "class-validator"
 import { GenderEnum } from "src/TypeOrms/Profile"
 
 export class createEmployeeDto{
@@ -108,13 +108,14 @@ export class updateEmployeeWorkDayListDto {
 
 export class getEmployeesAvailableDto {
 
+    @IsNumberString()
+    salonId: number
+    
     @IsDateString()
     appointmentDate: Date
 
-    
     @Matches(/^([0-1]?[0-9]|2?[0-4]):([0-5]?[0-9]):([0-5]?[0-9])$/)
     startTime: Date
-
    
     @Matches(/^([0-1]?[0-9]|2?[0-4]):([0-5]?[0-9]):([0-5]?[0-9])$/)
     estimatedEndTime: Date

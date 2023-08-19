@@ -22,35 +22,7 @@ export class SalonService {
 
         return salonToReturn
     }
-    async getSalonsFiltered(pageSize: number, pageNumber: number, salonType: string, sortOption?: string){
-        const filterArray = salonType.split('-')
-        let filteredSalon: SalonEntity[] = []
-        const salons = await this.salonRepository.find({relations: ['appointments']});
-        for (var i = 0; i < salons.length; i++){
-            const salonTypesArray = salons[i].salonTypes.split(',')
-            console.log("filter array: " + filterArray);
-            console.log("salon type array: " + salonTypesArray)
-            if ( filterArray.some((type) => salonTypesArray.includes(type) ) ){
-                console.log("found salon type in salonTypes")
-                filteredSalon.push(salons[i])
-            }
 
-        }
-
-        const salonToReturn = this.sortAndPaginateSalons(filteredSalon, pageSize, pageNumber, sortOption)
-
-        return salonToReturn
-    }
-    
-    async getSalon(idToFind: number){
-        const salon = await this.salonRepository.findOne({relations: ['appointments'], where: {id: idToFind}});
-        if (!salon) throw new HttpException('the salon with the given id cannot be found', HttpStatus.NOT_FOUND)
-
-        const salonToReturn = this.formatSalonForDisplay(salon)
-
-        return salonToReturn
-
-    }
     async getSalonsPage(page: number, pageSize: number, keyword: string) {
         const [list, count] = await this.salonRepository.findAndCount({
         //   order: { createdAt: 'DESC', },
@@ -86,15 +58,35 @@ export class SalonService {
         //     return salonPage
 
     }
-      
+
+    async getSalonsFiltered(pageSize: number, pageNumber: number, salonType: string, sortOption?: string){
+        const filterArray = salonType.split('-')
+        let filteredSalon: SalonEntity[] = []
+        const salons = await this.salonRepository.find({relations: ['appointments']});
+        for (var i = 0; i < salons.length; i++){
+            const salonTypesArray = salons[i].salonTypes.split(',')
+            console.log("filter array: " + filterArray);
+            console.log("salon type array: " + salonTypesArray)
+            if ( filterArray.some((type) => salonTypesArray.includes(type) ) ){
+                console.log("found salon type in salonTypes")
+                filteredSalon.push(salons[i])
+            }
+
+        }
+
+        const salonToReturn = this.sortAndPaginateSalons(filteredSalon, pageSize, pageNumber, sortOption)
+
+        return salonToReturn
+    }
+    
     async searchSalonQuery(searchKey: string, pageSize: number, pageNumber: number){
         const salons = await this.salonRepository.find({relations: ['serviceCategories']});
 
         if (searchKey.length == 0) throw new HttpException('the search keyword cannot be empty', HttpStatus.BAD_REQUEST)
 
         searchKey = searchKey.toLowerCase();
-
         const searchKeyList = searchKey.split(' ')
+
         console.log("list of keys to find in query")
         console.log(searchKeyList)
 
@@ -111,7 +103,7 @@ export class SalonService {
                 // console.log('search key loop number: ' + k)
                 const searchKey = searchKeyList[k]
                     
-                var startIndex = 0, index: number, salonNameIndices = [], salonAddressIndices = [], salonServiceCategoryIndices = [];
+                let startIndex = 0, index: number, salonNameIndices = [], salonAddressIndices = [], salonServiceCategoryIndices = [];
                 while ((index = salonToSearch.salonName.toLowerCase().indexOf(searchKey, startIndex)) > -1) {
                     salonNameIndices.push(index);
                     startIndex = index + searchKey.length;
@@ -123,7 +115,7 @@ export class SalonService {
                     startIndex = index + searchKey.length;
                 }
                 
-                var categoryScore = 0
+                let categoryScore = 0
                 for ( var j = 0; j < salonToSearch.serviceCategories.length; j++){
                     const categoryToSearch = salonToSearch.serviceCategories[j]
                     var categoryStartIndex = 0, categoryIndices = []
@@ -136,7 +128,8 @@ export class SalonService {
                     salonServiceCategoryIndices.push(categoryIndices)
                     categoryScore += categoryIndices.length
                 }
-
+                console.log('category score: ' + categoryScore)
+                console.log("salon service category indices length: " + salonServiceCategoryIndices.length)
                 // if (salonNameIndices.length != 0) console.log('found result in salon names-------')
                 // if (salonAddressIndices.length != 0) console.log('found result in salon address-------')
                 // if (categoryScore != 0) console.log('found result in salon categories-------')
@@ -145,9 +138,12 @@ export class SalonService {
                 if (resultScore != 0) {
                     searchkeyFound++
                     totalSearchScore += resultScore
-                    //console.log("number of search key found: " + searchkeyFound)
+                    // console.log("number of search key found: " + searchkeyFound)
+                    // console.log("total search score: " + totalSearchScore)
                 }
             }
+            console.log("number of search key found: " + searchkeyFound)
+            console.log("total search score: " + totalSearchScore)
             // if (searchkeyFound == searchKeyList.length) {
             //     // console.log('search key found match number of search key')
             //     const salonFound = {...salonToSearch, totalSearchScore}
@@ -172,6 +168,16 @@ export class SalonService {
         
     }
 
+    async getSalon(idToFind: number){
+        const salon = await this.salonRepository.findOne({relations: ['appointments'], where: {id: idToFind}});
+        if (!salon) throw new HttpException('the salon with the given id cannot be found', HttpStatus.NOT_FOUND)
+
+        const salonToReturn = this.formatSalonForDisplay(salon)
+
+        return salonToReturn
+
+    }
+    
     getSalonServiceCategories(idToFind: number){
         return this.salonRepository.findOne({relations: ['serviceCategories'], where: {id: idToFind}});
     }
@@ -195,11 +201,16 @@ export class SalonService {
         if (workDays.charAt(workDays.length - 1) == ','){
             workDays = workDays.substring(0, workDays.length - 1)
         }
+
         var salonTypes = ''
         for (var i = 0; i < newSalon.salonTypes.length; i++) {
             const currentType = newSalon.salonTypes[i]
-            salonTypes += currentType
+            salonTypes += currentType + ','
         }
+        if (salonTypes.charAt(salonTypes.length - 1) == ','){
+            salonTypes = salonTypes.substring(0, salonTypes.length - 1)
+        }
+
         const salonToSave = this.salonRepository.create({...newSalon, workDays, salonTypes});
         
         return this.salonRepository.save(salonToSave)
@@ -252,8 +263,8 @@ export class SalonService {
             } else {
                 const leftString = salonToUpdate.salonTypes.substring(0, indexToFind);
                 const rightString = salonToUpdate.salonTypes.substring(indexToFind + currentType.length + 1);
-                console.log("left: " + leftString)
-                console.log("right: " + rightString)
+                // console.log("left: " + leftString)
+                // console.log("right: " + rightString)
                 salonToUpdate.salonTypes = leftString + rightString
                 if (salonToUpdate.salonTypes.charAt(salonToUpdate.salonTypes.length - 1) == ','){
                     salonToUpdate.salonTypes = salonToUpdate.salonTypes.substring(0, salonToUpdate.salonTypes.length - 1)
@@ -274,22 +285,23 @@ export class SalonService {
         // if (timeFormat.test(startTime) == false) throw new HttpException("the start time format is incorrect, please enter the time by this format: hh:mm:ss", HttpStatus.BAD_REQUEST)
         // if (timeFormat.test(endTime) == false) throw new HttpException("the end time format is incorrect, please enter the time by this format: hh:mm:ss", HttpStatus.BAD_REQUEST)
         
-        const salonUpdated = this.updateWorkDay(salonToUpdate, updateDetails)
-        return this.salonRepository.save(salonUpdated);
+        salonToUpdate.workDays = this.updateWorkDay(salonToUpdate.workDays, updateDetails)
+
+        return this.salonRepository.save(salonToUpdate);
 
     }
     
     async updateSalonWorkDayList(idToUpdate: number, updateDetails: updateSalonWorkDayListDto){
         const salonToUpdate = await this.salonRepository.findOne({where: {id: idToUpdate}})
         if (!salonToUpdate) throw new HttpException('the salon with the given id cannot be found to update it\'s workday', HttpStatus.NOT_FOUND)
-        let salonUpdated: SalonEntity
+        
         for (var i = 0; i < updateDetails.workDayList.length; i++ ){
             const currentWorkDay = updateDetails.workDayList[i]
-            salonUpdated = this.updateWorkDay(salonToUpdate, currentWorkDay)
+            salonToUpdate.workDays = this.updateWorkDay(salonToUpdate.workDays, currentWorkDay)
 
         }
         
-        return this.salonRepository.save(salonUpdated);
+        return this.salonRepository.save(salonToUpdate);
 
     }
     
@@ -342,8 +354,8 @@ export class SalonService {
         }
         
         // console.log('sum is: ' + sum);
-        let averageRating
-        if ( sum == 0) {
+        let averageRating: number
+        if (sum == 0) {
             averageRating = 0
         } else {
             averageRating = sum / reviews.length
@@ -372,6 +384,17 @@ export class SalonService {
 
         return salonFormatted
     }
+    customPagination(salons, pageSize: number, pageNumber: number){
+        // console.log('page number: ' + pageNumber)
+        // console.log('page size: ' + pageSize)
+        var salonPage = []
+        for (var pageStartIndex = (pageNumber - 1) * pageSize; pageStartIndex < pageSize * pageNumber; pageStartIndex++){
+            // console.log('loop number: ' + pageStartIndex)
+            salonPage.push(salons[pageStartIndex])
+            // console.log(salonList[pageStartIndex].salonRating)
+        }
+        return salonPage
+    }
     async sortAndPaginateSalons(salons, pageSize:number, pageNumber: number, sortOption?: string){
         var formattedSalons = []
         for (var i = 0; i < salons.length; i++){
@@ -391,37 +414,27 @@ export class SalonService {
 
         return pageToReturn
     }
-    customPagination(salons, pageSize: number, pageNumber: number){
-        // console.log('page number: ' + pageNumber)
-        // console.log('page size: ' + pageSize)
-        var salonPage = []
-        for (var pageStartIndex = (pageNumber - 1) * pageSize; pageStartIndex < pageSize * pageNumber; pageStartIndex++){
-            // console.log('loop number: ' + pageStartIndex)
-            salonPage.push(salons[pageStartIndex])
-            // console.log(salonList[pageStartIndex].salonRating)
-        }
-        return salonPage
-    } 
-    updateWorkDay(salonToUpdate: SalonEntity, currentWorkDay){
+     
+    updateWorkDay(salonWorkDay, workDayToUpdate){
 
-        const workDayStr = currentWorkDay.workDay + '-' + currentWorkDay.startTime + '-' + currentWorkDay.endTime
-        const indexToFind = salonToUpdate.workDays.indexOf(currentWorkDay.workDay)
+        const workDayStr = workDayToUpdate.workDay + '-' + workDayToUpdate.startTime + '-' + workDayToUpdate.endTime
+        const indexToFind = salonWorkDay.indexOf(workDayToUpdate.workDay)
         if (indexToFind == -1){
-            if (salonToUpdate.workDays == ''){
-                salonToUpdate.workDays = workDayStr
+            if (salonWorkDay == ''){
+                salonWorkDay = workDayStr
             } else {
-                salonToUpdate.workDays = salonToUpdate.workDays + ',' + workDayStr
+                salonWorkDay = salonWorkDay + ',' + workDayStr
             }
             } else {
-                const leftString = salonToUpdate.workDays.substring(0, indexToFind);
-                const rightString = salonToUpdate.workDays.substring(indexToFind + workDayStr.length + 1);
-                salonToUpdate.workDays = leftString + rightString
-                if (salonToUpdate.workDays.charAt(salonToUpdate.workDays.length - 1) == ','){
-                    salonToUpdate.workDays = salonToUpdate.workDays.substring(0, salonToUpdate.workDays.length - 1)
+                const leftString = salonWorkDay.substring(0, indexToFind);
+                const rightString = salonWorkDay.substring(indexToFind + workDayStr.length + 1);
+                salonWorkDay = leftString + rightString
+                if (salonWorkDay.charAt(salonWorkDay.length - 1) == ','){
+                    salonWorkDay = salonWorkDay.substring(0, salonWorkDay.length - 1)
                 }
     
             }
-        return salonToUpdate
+        return salonWorkDay
     }
     quickSortSalonRating(arr) {
         if (arr.length <= 1) {

@@ -1,6 +1,6 @@
 import { IsArray, IsBoolean, IsDateString, IsNotEmpty, Matches } from "class-validator";
-import { ApprovalStatusEnum } from "src/TypeOrms/AppointmentEntity";
 import { ServiceEntity } from "src/TypeOrms/ServiceEntity";
+import { ApprovalStatusEnum } from "src/constants";
 
 export class createAppointmentDto {
 
