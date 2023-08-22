@@ -26,13 +26,15 @@ import { AppointmentModule } from './appointment/appointment.module';
 import { ReviewModule } from './review/review.module';
 import { AuthenModule } from './authen/authen.module';
 import { mysqlPort, mysqlUsername, mysqlPassword, mysqlDatabase } from "./constants";
+import { ConfigModule } from "@nestjs/config";
 
 
 
 
 
 @Module({
-  imports: [TypeOrmModule.forRoot({
+  imports: [
+    TypeOrmModule.forRoot({
     type: 'mysql',
     host:'localhost',
     port: mysqlPort,
@@ -51,7 +53,13 @@ import { mysqlPort, mysqlUsername, mysqlPassword, mysqlDatabase } from "./consta
       ServiceCategoryEntity
     ],
     synchronize: true
-  }), EmployeeModule, CustomerModule, ManagerModule, InventoryModule, ServiceCategoryModule, ServiceModule, SalonModule, AppointmentModule, ReviewModule, AuthenModule],
+  }),
+    ConfigModule.forRoot({
+      
+      isGlobal: true,
+      
+    }), 
+  EmployeeModule, CustomerModule, ManagerModule, InventoryModule, ServiceCategoryModule, ServiceModule, SalonModule, AppointmentModule, ReviewModule, AuthenModule ],
   controllers: [AppController],
   providers: [AppService],
 })

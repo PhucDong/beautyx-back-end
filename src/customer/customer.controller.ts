@@ -1,7 +1,7 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpException, HttpStatus, Param, ParseIntPipe, Post, Put, Req, UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
 import { CustomerService } from './customer.service';
 import { createCustomerDto, updateCustomerDto, updateFavoriteSalonDto } from 'src/DTOs/CustomerDto';
-import { LoginGuard, customerGuard } from 'src/authen/authen.guard';
+import JwtAuthenGuard, { LoginGuard, customerGuard } from 'src/authen/authen.guard';
 import { registerDto } from 'src/DTOs/AuthenDto';
 
 @Controller('customer')
@@ -13,9 +13,12 @@ export class CustomerController {
         const customers = await this.customerService.getCustomers();
         return customers
     }
-    //@UseGuards(LoginGuard, customerGuard)
+    @UseGuards(JwtAuthenGuard)
     @Get('id/:id')
-    getCustomer(@Param('id', ParseIntPipe) idToFind: number){
+    getCustomer(@Param('id', ParseIntPipe) idToFind: number,@Req() request){
+        if (request.user.id != idToFind) {
+            throw new HttpException('customer cannot get profiles belonging to other users', HttpStatus.UNAUTHORIZED)
+        }
         return this.customerService.getCustomer(idToFind);
     }
     @Get('id/:id/favorites')

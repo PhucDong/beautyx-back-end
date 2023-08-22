@@ -9,15 +9,18 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { CustomerEntity } from 'src/TypeOrms/CustomerEntity';
 import { ManagerEntity } from 'src/TypeOrms/ManagerEntity';
 import { Repository } from 'typeorm';
+import { ConfigService } from '@nestjs/config';
 @Injectable()
 export class AuthenService {
     //constructor(@Inject('USER_SERVICE') private readonly userService: UserService){}
   constructor(
     @InjectRepository(CustomerEntity) private customerRepository: Repository<CustomerEntity>,
     @InjectRepository(ManagerEntity) private managerRepository: Repository<ManagerEntity>,
-    private jwtService: JwtService
+    private jwtService: JwtService,
+    private readonly configService: ConfigService
   ) {}
   async generalLogin(signInDetails: loginDto){
+    console.log("cheking login detail in authen service")
     const customer = await this.customerRepository.findOneBy({email: signInDetails.email})
     const manager = await this.managerRepository.findOneBy({email: signInDetails.email})
     // let payload
@@ -44,12 +47,14 @@ export class AuthenService {
   public getCookieWithJwtToken(user: ManagerEntity | CustomerEntity) {
     console.log("getting cookie with access token")
     console.log("user in cookie creator")
-    console.log(user)
     const payload = { sub: user.id, fullName: user.firstname + ' ' +  user.lastname, email: user.email, role: user.role};
     const token = this.jwtService.sign(payload);
-    return `Authentication=${token}; HttpOnly; Path=/; Max-Age=${tokenDuration}`;
+    console.log('jwt token expiration time: ' + this.configService.get('JWT_EXPIRATION_TIME'))
+    return `Authentication=${token}; HttpOnly; Path=/; Max-Age=${this.configService.get('JWT_EXPIRATION_TIME')}`;
   }
-
+  public getCookieForLogOut() {
+    return `Authentication=; HttpOnly; Path=/; Max-Age=0`;
+  }
   async customerLogin(signInDetails: loginDto){
     const customer = await this.customerRepository.findOneBy({email: signInDetails.email})
         

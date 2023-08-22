@@ -12,7 +12,7 @@ export class AuthenController {
     @Post('general/login')
     async logIn(@Req() request, @Res() response: Response) {
       console.log("the user in the controller: ")
-      console.log(request.user)
+      //console.log(request.user)
       const user = request.user;
       const cookie = this.authenService.getCookieWithJwtToken(user);
       response.setHeader('Set-Cookie', cookie);
@@ -21,7 +21,14 @@ export class AuthenController {
       console.log("sending cookie and user info")
       return response.send(user);
     }
-
+    @Post('logout')
+    async logOut(@Req() request, @Res() response: Response) {
+      console.log("loging out controller")
+      const cookie = this.authenService.getCookieForLogOut();
+      response.setHeader('Set-Cookie', cookie);
+      return response.sendStatus(200);
+    }
+    
     @Post('customer/login')
     customerLogin(@Body() loginDetails: loginDto) {
       return this.authenService.customerLogin(loginDetails);

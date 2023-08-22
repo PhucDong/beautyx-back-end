@@ -83,7 +83,7 @@ export class customerGuard implements CanActivate {
     
     const request = context.switchToHttp().getRequest();
     const user = request.user
-    console.log("the user in the request: " + user.sub)
+    console.log("the user in the request in the customer guard: " + user.sub)
     console.log("request params: " + request.params.id)
 
     return (user.sub == request.params.id)
