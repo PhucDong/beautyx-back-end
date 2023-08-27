@@ -18,7 +18,7 @@ export class SalonService {
     async getSalons(pageSize: number, pageNumber: number, sortOption?: string){
         const salons = await this.salonRepository.find({relations: ['appointments']});
         
-        const salonToReturn = this.sortAndPaginateSalons(salons, pageSize, pageNumber, sortOption)
+        const salonToReturn = this.formatAndSortSalons(salons, sortOption)
 
         return salonToReturn
     }
@@ -74,9 +74,9 @@ export class SalonService {
 
         }
 
-        const salonToReturn = this.sortAndPaginateSalons(filteredSalon, pageSize, pageNumber, sortOption)
-
-        return salonToReturn
+        const salonToReturn = this.formatAndSortSalons(filteredSalon, sortOption)
+        const salonPage = this.customPagination(salonToReturn, pageSize, pageNumber)
+        return salonPage
     }
     
     async searchSalonQuery(searchKey: string, pageSize: number, pageNumber: number){
@@ -310,6 +310,35 @@ export class SalonService {
 
     }
 
+    async updateSalonPhoto(idToUpdate: number, photoType: string, file: Express.Multer.File){
+        console.log("file name in the update salon photo service: " + file.filename)
+        console.log("phototype in the update salon photo service: " + photoType)
+        const salonToUpdate = await this.salonRepository.findOne({where: {id: idToUpdate}})
+        if (!salonToUpdate) throw new HttpException('the salon with the given id cannot be found to update it\'s photos', HttpStatus.NOT_FOUND)
+        const photoName = file.filename
+        const indexToFind = salonToUpdate.salonPhotos.indexOf(photoName)
+            if (indexToFind == -1){
+                if (salonToUpdate.salonPhotos == ''){
+                    salonToUpdate.salonPhotos = photoName
+                } else {
+                    salonToUpdate.salonPhotos = salonToUpdate.salonPhotos + ',' + photoName
+                }
+            } else {
+                const leftString = salonToUpdate.salonPhotos.substring(0, indexToFind);
+                const rightString = salonToUpdate.salonPhotos.substring(indexToFind + photoName.length + 1);
+                // console.log("left: " + leftString)
+                // console.log("right: " + rightString)
+                salonToUpdate.salonPhotos = leftString + rightString
+                if (salonToUpdate.salonPhotos.charAt(salonToUpdate.salonPhotos.length - 1) == ','){
+                    salonToUpdate.salonPhotos = salonToUpdate.salonPhotos.substring(0, salonToUpdate.salonPhotos.length - 1)
+                }
+    
+            }
+        
+    
+        return this.salonRepository.save(salonToUpdate);
+
+    }
   /////////////// utility functions ///////////////
 
     workDayStringToArray(workDayStr: string){
@@ -363,9 +392,8 @@ export class SalonService {
         }
         
         const highlightsToReturn = salon.highLights.split(',')
-        console.log("salon types in database: " + salon.salonTypes)
         const salonTypesToReturn = salon.salonTypes.split(',') 
-        
+        const salonPhotoToReturn = salon.salonPhotos.split(',')
         const workDaysListToReturn = this.workDayStringToArray(salon.workDays)
         
         const salonFormatted = {
@@ -377,7 +405,9 @@ export class SalonService {
             description: salon.description,
             workDays: workDaysListToReturn,
             reviews: reviewsToReturn,
-            salonRating: averageRating
+            reviewsNumber: reviewsToReturn.length,
+            salonRating: averageRating,
+            salonPhoto: salonPhotoToReturn
         }
         // console.log("salon to return------------")
         // console.log(salonToReturn)
@@ -395,7 +425,7 @@ export class SalonService {
         }
         return salonPage
     }
-    async sortAndPaginateSalons(salons, pageSize:number, pageNumber: number, sortOption?: string){
+    async formatAndSortSalons(salons, sortOption?: string){
         var formattedSalons = []
         for (var i = 0; i < salons.length; i++){
             let salonToReturn = await this.formatSalonForDisplay(salons[i])
@@ -410,9 +440,9 @@ export class SalonService {
             sortedSalons = this.quickSortSalonRating(formattedSalons)
         }
         
-        const pageToReturn = this.customPagination(sortedSalons, pageSize, pageNumber)
+        
 
-        return pageToReturn
+        return sortedSalons
     }
      
     updateWorkDay(salonWorkDay, workDayToUpdate){

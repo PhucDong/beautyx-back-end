@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Post, UseGuards, UsePipes, ValidationPipe, Res, Req} from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Post, UseGuards, UsePipes, ValidationPipe, Res, Req, ParseIntPipe, Query} from '@nestjs/common';
 import { AuthenService } from './authen.service';
 import { loginDto, registerDto } from 'src/DTOs/AuthenDto';
 import { LocalAuthenGuard, LoginGuard } from './authen.guard';
@@ -21,6 +21,7 @@ export class AuthenController {
       console.log("sending cookie and user info")
       return response.send(user);
     }
+    
     @Post('logout')
     async logOut(@Req() request, @Res() response: Response) {
       console.log("loging out controller")
@@ -28,28 +29,37 @@ export class AuthenController {
       response.setHeader('Set-Cookie', cookie);
       return response.sendStatus(200);
     }
-    
-    @Post('customer/login')
-    customerLogin(@Body() loginDetails: loginDto) {
-      return this.authenService.customerLogin(loginDetails);
-    }
-    @Post('manager/login')
-    managerLogin(@Body() loginDetails: loginDto) {
-      return this.authenService.managerLogin(loginDetails);
+
+    @Post('general/register/')
+    @UsePipes(ValidationPipe)
+    register(@Body() newUser: registerDto, @Query("salonId") salonId?: number){
+        console.log('registering general user, customer or manager')
+        return this.authenService.generalRegister(newUser, salonId)
     }
 
-    @Post('register')
-    @UsePipes(ValidationPipe)
-    registerCustomer(@Body() newCustomer: registerDto){
-        console.log('registering customer')
-        return this.authenService.registerCustomer(newCustomer)
-    }
-    @Post('register')
-    @UsePipes(ValidationPipe)
-    registerManager(@Body() newCustomer: registerDto){
-        console.log('registering customer')
-        return this.authenService.registerManager(newCustomer)
-    }
+    // @Post('customer/login')
+    // customerLogin(@Body() loginDetails: loginDto) {
+    //   return this.authenService.customerLogin(loginDetails);
+    // }
+    // @Post('manager/login')
+    // managerLogin(@Body() loginDetails: loginDto) {
+    //   return this.authenService.managerLogin(loginDetails);
+    // }
+
+    
+
+    // @Post('register')
+    // @UsePipes(ValidationPipe)
+    // registerCustomer(@Body() newCustomer: registerDto){
+    //     console.log('registering customer')
+    //     return this.authenService.registerCustomer(newCustomer)
+    // }
+    // @Post('register')
+    // @UsePipes(ValidationPipe)
+    // registerManager(@Body() newCustomer: registerDto){
+    //     console.log('registering customer')
+    //     return this.authenService.registerManager(newCustomer)
+    // }
 
     @UseGuards(LoginGuard)
     @Get('profile')

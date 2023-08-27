@@ -18,6 +18,9 @@ export class CustomerEntity extends Profile{
     })
     serviceUsageTime: number
 
+    @Column()
+    customerPhotos: string;
+
     @OneToMany(() => ReviewEntity, (review) => review.customer)
     reviews: ReviewEntity[]
 

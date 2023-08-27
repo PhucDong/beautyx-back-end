@@ -104,14 +104,15 @@ export class SalonController {
     deleteSalon(@Param('id', ParseIntPipe) idToDelete: number,){
         return this.salonService.deleteSalon(idToDelete)
     }
-    @Post('photo')
+
+    @Post('/id/:id/photo/:type')
     @UseInterceptors(FileInterceptor('file', {
         storage: diskStorage({
             destination: './pics',
             filename: (req, file, callback) => {
                 const name = file.originalname.split('.')[0];
                 const fileExtension = file.originalname.split('.')[1];
-                const newFileName = name.split(" ").join('_')+'_'+Date.now()+'.'+fileExtension;
+                const newFileName = name.split(" ").join('_') + '_' + Date.now() + '.' + fileExtension;
 
                 callback(null, newFileName);
             }
@@ -123,10 +124,14 @@ export class SalonController {
             cb(null, true);
         }
     }))
-    uploadPhoto(@UploadedFile() file: Express.Multer.File) {
+    uploadPhoto(@UploadedFile() file: Express.Multer.File, @Param('id', ParseIntPipe) idToUpdate: number, @Param('type') photoType: string) {
+        
         if (!file) {
             throw new BadRequestException('File is not an image');
         } else {
+            console.log("the file name of the picture in the upload controller: " + file.filename)
+            console.log("update details photo type: " + photoType)
+            this.salonService.updateSalonPhoto(idToUpdate, photoType, file)
             const response = {
                 filePath: `/salon/pictures/${file.filename}`
             };

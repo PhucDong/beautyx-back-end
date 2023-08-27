@@ -33,6 +33,8 @@ export class SalonEntity {
     @Column()
     salonTypes: string;
 
+    @Column()
+    salonPhotos: string;
     
     @OneToMany(() => ServiceCategoryEntity, (serivceCategories) => serivceCategories.salon)
     serviceCategories: ServiceCategoryEntity[]

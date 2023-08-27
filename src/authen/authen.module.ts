@@ -12,9 +12,10 @@ import { ManagerEntity } from 'src/TypeOrms/ManagerEntity';
 import { CustomerEntity } from 'src/TypeOrms/CustomerEntity';
 import { JwtStrategy } from './jwt.strategy';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { SalonEntity } from 'src/TypeOrms/SalonEntity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([ManagerEntity, CustomerEntity]),
+  imports: [TypeOrmModule.forFeature([ManagerEntity, CustomerEntity, SalonEntity]),
     JwtModule.registerAsync({
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) => {

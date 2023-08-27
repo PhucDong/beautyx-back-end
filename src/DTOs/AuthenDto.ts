@@ -1,5 +1,6 @@
-import { IsEmail, IsEnum, IsNotEmpty, Matches, isEmail } from "class-validator";
+import { IsEmail, IsEnum, IsNotEmpty, IsNumber, Matches, isEmail } from "class-validator";
 import { GenderEnum } from "src/TypeOrms/Profile";
+import { RoleEnum } from "src/constants";
 
 export class loginDto {
     @IsEmail()
@@ -24,7 +25,8 @@ export class registerDto{
     // ^(?=.*[A-Z].*[A-Z])(?=.*[!@#$&*])(?=.*[0-9].*[0-9])(?=.*[a-z].*[a-z].*[a-z]).{8}$
     @Matches(/^(?=.*[A-Z])(?=.*[!@#$&*])(?=.*[0-9])(?=.*[a-z]).{8,}$/)
     password: string
-
-    //customer section
+    
+    @IsEnum(RoleEnum)
+    role: RoleEnum
  
 } 
