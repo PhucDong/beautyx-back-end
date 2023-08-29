@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { PassportStrategy } from "@nestjs/passport";
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import { RoleEnum, jwtConstants } from "src/constants";
+import { RoleEnum } from "src/constants";
 import { CustomerService } from "src/customer/customer.service";
 import { ManagerService } from "src/manager/manager.service";
 import { Request } from 'express';

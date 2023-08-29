@@ -6,7 +6,7 @@ import { ReviewEntity } from 'src/TypeOrms/ReviewEntity';
 import { SalonEntity } from 'src/TypeOrms/SalonEntity';
 import { SalonTypeEnum } from 'src/constants';
 import { ArrayContains, In, Like, Repository } from 'typeorm';
-
+import * as fs from 'fs';
 @Injectable()
 export class SalonService {
     constructor(
@@ -81,7 +81,7 @@ export class SalonService {
     
     async searchSalonQuery(searchKey: string, pageSize: number, pageNumber: number){
         const salons = await this.salonRepository.find({relations: ['serviceCategories']});
-
+        const sortedSalons = await this.formatAndSortSalons(salons)
         if (searchKey.length == 0) throw new HttpException('the search keyword cannot be empty', HttpStatus.BAD_REQUEST)
 
         searchKey = searchKey.toLowerCase();
@@ -92,9 +92,9 @@ export class SalonService {
 
         var foundList = []
 
-        for (var i = 0; i < salons.length; i++){
+        for (var i = 0; i < sortedSalons.length; i++){
             //console.log('search loop: ' + i)
-            const salonToSearch = salons[i]
+            const salonToSearch = sortedSalons[i]
             // console.log("salon being searched")
             //console.log(salonToSearch)
             var searchkeyFound = 0;
@@ -310,35 +310,91 @@ export class SalonService {
 
     }
 
-    async updateSalonPhoto(idToUpdate: number, photoType: string, file: Express.Multer.File){
+    async updateSalonPhoto(idToUpdate: number, file: Express.Multer.File){
         console.log("file name in the update salon photo service: " + file.filename)
-        console.log("phototype in the update salon photo service: " + photoType)
         const salonToUpdate = await this.salonRepository.findOne({where: {id: idToUpdate}})
         if (!salonToUpdate) throw new HttpException('the salon with the given id cannot be found to update it\'s photos', HttpStatus.NOT_FOUND)
         const photoName = file.filename
-        const indexToFind = salonToUpdate.salonPhotos.indexOf(photoName)
+        const photoNameParts = photoName.split('_')
+        const photoArray = salonToUpdate.salonPhotos.split(',')
+        //console.log("photo name part 0: " + photoNameParts[0])
+        console.log('salon photo string: ' + salonToUpdate.salonPhotos)
+        console.log('the length of the photo array: ' + photoArray.length)
+        console.log('photo array: ' + photoArray)
+        if (salonToUpdate.salonPhotos == ""){
+            console.log("photo string is null")
+            salonToUpdate.salonPhotos = photoName
+            return this.salonRepository.save(salonToUpdate);
+        }
+        for (var i = 0; i < photoArray.length; i++){
+            const currentPhoto = photoArray[i]
+            console.log("current photo name: " + currentPhoto)
+            const indexToFind = currentPhoto.indexOf(photoNameParts[0])
+            
             if (indexToFind == -1){
-                if (salonToUpdate.salonPhotos == ''){
-                    salonToUpdate.salonPhotos = photoName
+                if( i != photoArray.length -1 ){
+                    continue
                 } else {
                     salonToUpdate.salonPhotos = salonToUpdate.salonPhotos + ',' + photoName
+                    return this.salonRepository.save(salonToUpdate);
                 }
             } else {
-                const leftString = salonToUpdate.salonPhotos.substring(0, indexToFind);
-                const rightString = salonToUpdate.salonPhotos.substring(indexToFind + photoName.length + 1);
-                // console.log("left: " + leftString)
-                // console.log("right: " + rightString)
-                salonToUpdate.salonPhotos = leftString + rightString
-                if (salonToUpdate.salonPhotos.charAt(salonToUpdate.salonPhotos.length - 1) == ','){
-                    salonToUpdate.salonPhotos = salonToUpdate.salonPhotos.substring(0, salonToUpdate.salonPhotos.length - 1)
+                photoArray.splice(i, 1, photoName)
+                const oldPath = './pics/' + currentPhoto
+                console.log('photo old path: ' + oldPath)
+                let newPhotoStr = ''
+                
+                if (fs.existsSync(oldPath)) {
+                  fs.unlink(oldPath, (err) => {
+                    if (err) {
+                      console.error(err);
+                      return;
+                    }
+                  });
                 }
-    
+                for (var j = 0 ; j < photoArray.length; j++) {
+                    newPhotoStr += photoArray[j] + ','
+                }
+                salonToUpdate.salonPhotos = newPhotoStr
+                console.log("new photo string: " + newPhotoStr)
+                return this.salonRepository.save(salonToUpdate);
             }
         
-    
-        return this.salonRepository.save(salonToUpdate);
+                
+        }
 
     }
+
+    // async updateSalonPhoto(idToUpdate: number, photoType: string, file: Express.Multer.File){
+    //     console.log("file name in the update salon photo service: " + file.filename)
+    //     console.log("phototype in the update salon photo service: " + photoType)
+    //     const salonToUpdate = await this.salonRepository.findOne({where: {id: idToUpdate}})
+    //     if (!salonToUpdate) throw new HttpException('the salon with the given id cannot be found to update it\'s photos', HttpStatus.NOT_FOUND)
+    //     const photoName = file.filename
+    //     const indexToFind = salonToUpdate.salonPhotos.indexOf(photoName)
+    //         if (indexToFind == -1){
+    //             if (salonToUpdate.salonPhotos == ''){
+    //                 salonToUpdate.salonPhotos = photoName
+    //             } else {
+    //                 salonToUpdate.salonPhotos = salonToUpdate.salonPhotos + ',' + photoName
+    //             }
+    //         } else {
+    //             const leftString = salonToUpdate.salonPhotos.substring(0, indexToFind);
+    //             const rightString = salonToUpdate.salonPhotos.substring(indexToFind + photoName.length + 1);
+    //             // console.log("left: " + leftString)
+    //             // console.log("right: " + rightString)
+    //             salonToUpdate.salonPhotos = leftString + rightString
+    //             if (salonToUpdate.salonPhotos.charAt(salonToUpdate.salonPhotos.length - 1) == ','){
+    //                 salonToUpdate.salonPhotos = salonToUpdate.salonPhotos.substring(0, salonToUpdate.salonPhotos.length - 1)
+    //             }
+    
+    //         }
+        
+    
+    //     return this.salonRepository.save(salonToUpdate);
+
+    // }
+
   /////////////// utility functions ///////////////
 
     workDayStringToArray(workDayStr: string){
@@ -407,7 +463,8 @@ export class SalonService {
             reviews: reviewsToReturn,
             reviewsNumber: reviewsToReturn.length,
             salonRating: averageRating,
-            salonPhoto: salonPhotoToReturn
+            //salonPhotos: salonPhotoToReturn
+            salonPhotos: salon.salonPhotos
         }
         // console.log("salon to return------------")
         // console.log(salonToReturn)
@@ -439,8 +496,6 @@ export class SalonService {
         } else {
             sortedSalons = this.quickSortSalonRating(formattedSalons)
         }
-        
-        
 
         return sortedSalons
     }

@@ -8,13 +8,15 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { CustomerEntity } from 'src/TypeOrms/CustomerEntity';
 import { SalonEntity } from 'src/TypeOrms/SalonEntity';
 import { Repository } from 'typeorm';
-import { jwtConstants } from 'src/constants';
 import { AuthGuard } from '@nestjs/passport';
+import { ConfigService } from '@nestjs/config';
   
 @Injectable()
 export class LoginGuard implements CanActivate {
 
-    constructor(private jwtService: JwtService
+    constructor(
+      private jwtService: JwtService,
+      private configService: ConfigService
       
       ) {}
    
@@ -29,7 +31,7 @@ export class LoginGuard implements CanActivate {
         const payload = await this.jwtService.verifyAsync(
           token,
           {
-            secret: jwtConstants.secret
+            secret: this.configService.get('JWT_SECRET')
           }
         );
         // 💡 We're assigning the payload to the request object here

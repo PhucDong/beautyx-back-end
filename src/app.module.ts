@@ -25,41 +25,45 @@ import { ServiceService } from "./service/service.service";
 import { AppointmentModule } from './appointment/appointment.module';
 import { ReviewModule } from './review/review.module';
 import { AuthenModule } from './authen/authen.module';
-import { mysqlPort, mysqlUsername, mysqlPassword, mysqlDatabase } from "./constants";
-import { ConfigModule } from "@nestjs/config";
+import { ConfigModule, ConfigService } from "@nestjs/config";
 
-
+import * as Joi from '@hapi/joi';
 
 
 
 @Module({
   imports: [
-    TypeOrmModule.forRoot({
-    type: 'mysql',
-    host:'localhost',
-    port: mysqlPort,
-    username: mysqlUsername,
-    password: mysqlPassword,
-    database: mysqlDatabase,
-    entities:[
-      ManagerEntity, 
-      CustomerEntity, 
-      EmployeeEntity, 
-      ReviewEntity, 
-      AppointmentEntity, 
-      InventoryEntity, 
-      SalonEntity, 
-      ServiceEntity, 
-      ServiceCategoryEntity
-    ],
-    synchronize: true
+    TypeOrmModule.forRootAsync({
+    imports: [ConfigModule],
+    inject:[ConfigService],
+    useFactory: (configService: ConfigService) =>({
+      type: 'mysql',
+      host:'localhost',
+      port: configService.get('MYSQL_PORT'),
+      username: configService.get('MYSQL_USERNAME'),
+      password: configService.get('MYSQL_PASSWORD'),
+      database: configService.get('MYSQL_DATABASE'),
+      entities:[
+        ManagerEntity, 
+        CustomerEntity, 
+        EmployeeEntity, 
+        ReviewEntity, 
+        AppointmentEntity, 
+        InventoryEntity, 
+        SalonEntity, 
+        ServiceEntity, 
+        ServiceCategoryEntity
+      ],
+      synchronize: true
+    })
+    
   }),
     ConfigModule.forRoot({
       
       isGlobal: true,
       
     }), 
-  EmployeeModule, CustomerModule, ManagerModule, InventoryModule, ServiceCategoryModule, ServiceModule, SalonModule, AppointmentModule, ReviewModule, AuthenModule ],
+  EmployeeModule, CustomerModule, ManagerModule, InventoryModule, ServiceCategoryModule, ServiceModule, SalonModule, AppointmentModule, ReviewModule, AuthenModule, ConfigModule ],
   controllers: [AppController],
   providers: [AppService],
 })

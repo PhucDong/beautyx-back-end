@@ -4,7 +4,7 @@ import { comparePasswordAndHash, passwordToHash } from './bcrypt';
 import { CustomerService } from 'src/customer/customer.service';
 import { loginDto, registerDto } from 'src/DTOs/AuthenDto';
 import { ManagerService } from 'src/manager/manager.service';
-import { RoleEnum, tokenDuration } from 'src/constants';
+import { RoleEnum } from 'src/constants';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CustomerEntity } from 'src/TypeOrms/CustomerEntity';
 import { ManagerEntity } from 'src/TypeOrms/ManagerEntity';
@@ -28,7 +28,7 @@ export class AuthenService {
     const payload = { sub: user.id, fullName: user.firstname + ' ' +  user.lastname, email: user.email, role: user.role};
     const token = this.jwtService.sign(payload);
     console.log('jwt token expiration time: ' + this.configService.get('JWT_EXPIRATION_TIME'))
-    return `Authentication=${token}; HttpOnly; Path=/; Max-Age=${this.configService.get('JWT_EXPIRATION_TIME')}`;
+    return `Authentication=${token}; HttpOnly; Path=/; Max-Age=${this.configService.get('JWT_EXPIRATION_TIME') * 60}`;
   }
   public getCookieForLogOut() {
     return `Authentication=; HttpOnly; Path=/; Max-Age=0`;

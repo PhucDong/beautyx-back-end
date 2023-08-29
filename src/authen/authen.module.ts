@@ -3,7 +3,6 @@ import { AuthenController } from './authen.controller';
 import { AuthenService } from './authen.service';
 import { CustomerModule } from 'src/customer/customer.module';
 import { JwtModule } from '@nestjs/jwt';
-import { jwtConstants, tokenDuration } from 'src/constants';
 import { ManagerModule } from 'src/manager/manager.module';
 import { PassportModule } from '@nestjs/passport';
 import { LocalStrategy } from './local.strategy';

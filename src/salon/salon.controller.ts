@@ -7,6 +7,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { Request, Response } from 'express';
 import { SalonTypeEnum } from 'src/constants';
+import { multerOptions } from 'src/FileUpload';
 
 @Controller('salon')
 export class SalonController {
@@ -105,40 +106,23 @@ export class SalonController {
         return this.salonService.deleteSalon(idToDelete)
     }
 
-    @Post('/id/:id/photo/:type')
-    @UseInterceptors(FileInterceptor('file', {
-        storage: diskStorage({
-            destination: './pics',
-            filename: (req, file, callback) => {
-                const name = file.originalname.split('.')[0];
-                const fileExtension = file.originalname.split('.')[1];
-                const newFileName = name.split(" ").join('_') + '_' + Date.now() + '.' + fileExtension;
-
-                callback(null, newFileName);
-            }
-        }),
-        fileFilter: (req, file, cb) => {
-            if(!file.originalname.match(/\.(jpg|jpeg|png|gif)$/)) {
-                return cb(null, false);
-            } else
-            cb(null, true);
-        }
-    }))
-    uploadPhoto(@UploadedFile() file: Express.Multer.File, @Param('id', ParseIntPipe) idToUpdate: number, @Param('type') photoType: string) {
+    @Post('/id/:salonId/upload/:imageType')
+    @UseInterceptors(FileInterceptor('file', multerOptions ))
+    uploadWallpaper(@UploadedFile() file: Express.Multer.File, @Param('salonId', ParseIntPipe) idToUpdate: number) {
         
         if (!file) {
             throw new BadRequestException('File is not an image');
         } else {
-            console.log("the file name of the picture in the upload controller: " + file.filename)
-            console.log("update details photo type: " + photoType)
-            this.salonService.updateSalonPhoto(idToUpdate, photoType, file)
-            const response = {
-                filePath: `/salon/pictures/${file.filename}`
-            };
-            return response;
+            //console.log("the file name of the picture in the upload controller: " + file.filename)
+            return this.salonService.updateSalonPhoto(idToUpdate, file)
+            // const response = {
+            //     filePath: `/salon/pictures/${file.filename}`
+            // };
+            // return response;
         }
     }
 
+    
     @Get('pictures/:filename')
     async getPicture(@Param('filename') fileName, @Res() res: Response) {
         res.sendFile(fileName, {root: './pics'});

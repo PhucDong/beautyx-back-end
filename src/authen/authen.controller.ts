@@ -15,6 +15,7 @@ export class AuthenController {
       //console.log(request.user)
       const user = request.user;
       const cookie = this.authenService.getCookieWithJwtToken(user);
+      console.log(" the cookie is: " + cookie)
       response.setHeader('Set-Cookie', cookie);
       //response.cookie("access_token", "who let the dogs out")
       //response.headers.set('Set-Cookie', cookie)
