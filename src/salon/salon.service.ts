@@ -80,7 +80,7 @@ export class SalonService {
     }
     
     async searchSalonQuery(searchKey: string, pageSize: number, pageNumber: number){
-        const salons = await this.salonRepository.find({relations: ['serviceCategories']});
+        const salons = await this.salonRepository.find({relations: ['serviceCategories', 'appointments']});
         const sortedSalons = await this.formatAndSortSalons(salons)
         if (searchKey.length == 0) throw new HttpException('the search keyword cannot be empty', HttpStatus.BAD_REQUEST)
 
@@ -91,16 +91,17 @@ export class SalonService {
         console.log(searchKeyList)
 
         var foundList = []
-
+        console.log('length of sorted salon: ' + sortedSalons.length)
+        //console.log(sortedSalons)
         for (var i = 0; i < sortedSalons.length; i++){
-            //console.log('search loop: ' + i)
+            console.log('search salon loop: ' + i)
             const salonToSearch = sortedSalons[i]
             // console.log("salon being searched")
             //console.log(salonToSearch)
             var searchkeyFound = 0;
             var totalSearchScore = 0;
             for (var k = 0; k < searchKeyList.length; k++){
-                // console.log('search key loop number: ' + k)
+                 console.log('search key loop number: ' + k)
                 const searchKey = searchKeyList[k]
                     
                 let startIndex = 0, index: number, salonNameIndices = [], salonAddressIndices = [], salonServiceCategoryIndices = [];
@@ -116,7 +117,9 @@ export class SalonService {
                 }
                 
                 let categoryScore = 0
+                console.log("service categories: " + salonToSearch.serviceCategories)
                 for ( var j = 0; j < salonToSearch.serviceCategories.length; j++){
+                    console.log("serivce categories search loop: " + j)
                     const categoryToSearch = salonToSearch.serviceCategories[j]
                     var categoryStartIndex = 0, categoryIndices = []
                     while ((index = categoryToSearch.serviceCategoryName.toLowerCase().indexOf(searchKey, categoryStartIndex)) > -1) {
@@ -414,7 +417,8 @@ export class SalonService {
     async formatSalonForDisplay(salon) {
         console.log("current salon: " + salon.salonName)
         let appointmentIdList: number[] = []
-
+        console.log("the salons appointments: " + salon.appointments)
+        console.log('the length of the salons appointments:' + salon.appointments.length)
         for ( var i = 0; i < salon.appointments.length; i++) {
             appointmentIdList.push(salon.appointments[i].id)
         }
@@ -451,21 +455,29 @@ export class SalonService {
         const salonTypesToReturn = salon.salonTypes.split(',') 
         const salonPhotoToReturn = salon.salonPhotos.split(',')
         const workDaysListToReturn = this.workDayStringToArray(salon.workDays)
-        
-        const salonFormatted = {
-            id: salon.id,
-            salonName: salon.salonName, 
-            salonAddress: salon.salonAddress,
+        const salonFormatted = this.salonRepository.create({...salon, 
             highLights: highlightsToReturn,
             salonTypes: salonTypesToReturn,
-            description: salon.description,
             workDays: workDaysListToReturn,
             reviews: reviewsToReturn,
             reviewsNumber: reviewsToReturn.length,
             salonRating: averageRating,
-            //salonPhotos: salonPhotoToReturn
-            salonPhotos: salon.salonPhotos
-        }
+        })
+        // const salonFormatted = {
+        //     id: salon.id,
+        //     salonName: salon.salonName, 
+        //     salonAddress: salon.salonAddress,
+        //     highLights: highlightsToReturn,
+        //     salonTypes: salonTypesToReturn,
+        //     description: salon.description,
+        //     workDays: workDaysListToReturn,
+        //     reviews: reviewsToReturn,
+        //     reviewsNumber: reviewsToReturn.length,
+        //     salonRating: averageRating,
+        //     //salonPhotos: salonPhotoToReturn
+        //     salonPhotos: salon.salonPhotos
+        // }
+        
         // console.log("salon to return------------")
         // console.log(salonToReturn)
 
@@ -485,6 +497,7 @@ export class SalonService {
     async formatAndSortSalons(salons, sortOption?: string){
         var formattedSalons = []
         for (var i = 0; i < salons.length; i++){
+            console.log("curent formatting salon: " + salons[i].id)
             let salonToReturn = await this.formatSalonForDisplay(salons[i])
             formattedSalons.push(salonToReturn)
         }
@@ -496,8 +509,13 @@ export class SalonService {
         } else {
             sortedSalons = this.quickSortSalonRating(formattedSalons)
         }
-
-        return sortedSalons
+        if (!sortOption) {
+            console.log("no sorting options specified, returning formatted salons with default sorting")
+            return formattedSalons
+        } else {
+            console.log("returning formatted salons sorted by options")
+            return sortedSalons
+        }
     }
      
     updateWorkDay(salonWorkDay, workDayToUpdate){
