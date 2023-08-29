@@ -455,14 +455,23 @@ export class SalonService {
         const salonTypesToReturn = salon.salonTypes.split(',') 
         const salonPhotoToReturn = salon.salonPhotos.split(',')
         const workDaysListToReturn = this.workDayStringToArray(salon.workDays)
-        const salonFormatted = this.salonRepository.create({...salon, 
+        // const salonFormatted = this.salonRepository.create({...salon, 
+        //     highLights: highlightsToReturn,
+        //     salonTypes: salonTypesToReturn,
+        //     workDays: workDaysListToReturn,
+        //     reviews: reviewsToReturn,
+        //     reviewsNumber: reviewsToReturn.length,
+        //     salonRating: averageRating,
+        // })
+        const salonFormatted = {
+            ...salon,
             highLights: highlightsToReturn,
             salonTypes: salonTypesToReturn,
             workDays: workDaysListToReturn,
             reviews: reviewsToReturn,
             reviewsNumber: reviewsToReturn.length,
             salonRating: averageRating,
-        })
+        }
         // const salonFormatted = {
         //     id: salon.id,
         //     salonName: salon.salonName, 
