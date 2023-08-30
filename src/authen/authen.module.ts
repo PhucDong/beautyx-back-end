@@ -12,6 +12,8 @@ import { CustomerEntity } from 'src/TypeOrms/CustomerEntity';
 import { JwtStrategy } from './jwt.strategy';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { SalonEntity } from 'src/TypeOrms/SalonEntity';
+import { JwtRefreshTokenStrategy } from './jwtRefresh.strategy';
+import { SalonModule } from 'src/salon/salon.module';
 
 @Module({
   imports: [TypeOrmModule.forFeature([ManagerEntity, CustomerEntity, SalonEntity]),
@@ -24,9 +26,9 @@ import { SalonEntity } from 'src/TypeOrms/SalonEntity';
         };
       }
     }),
-    CustomerModule, ManagerModule, PassportModule, ConfigModule],
+    CustomerModule, ManagerModule, SalonModule, PassportModule, ConfigModule],
   controllers: [AuthenController],
-  providers: [AuthenService, LocalStrategy, JwtStrategy]
+  providers: [AuthenService, LocalStrategy, JwtStrategy, JwtRefreshTokenStrategy]
 })
 export class AuthenModule {}
 

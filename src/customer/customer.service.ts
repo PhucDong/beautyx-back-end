@@ -5,8 +5,10 @@ import { registerDto } from 'src/DTOs/AuthenDto';
 import { createCustomerDto, updateCustomerDto, updateFavoriteSalonDto } from 'src/DTOs/CustomerDto';
 import { CustomerEntity } from 'src/TypeOrms/CustomerEntity';
 import { SalonEntity } from 'src/TypeOrms/SalonEntity';
-import { passwordToHash } from 'src/authen/bcrypt';
+import { comparePasswordAndHash, passwordToHash } from 'src/authen/bcrypt';
 import { Repository } from 'typeorm';
+import * as bcrypt from 'bcrypt';
+
 
 @Injectable()
 export class CustomerService {
@@ -38,7 +40,9 @@ export class CustomerService {
         const customerToSave = this.customerRepository.create({...newCustomer, password, role});
         return this.customerRepository.save(customerToSave)
     }
-    
+    registerCustomer(newCustomer: registerDto){
+        return this.customerRepository.save(newCustomer)
+    }
 
     updateCustomer(idToUpdate: number, updateDetails: updateCustomerDto){
         return this.customerRepository.update( idToUpdate, {...updateDetails})
@@ -80,6 +84,7 @@ export class CustomerService {
         
     
     }
+
     deleteCustomer(idToDelete: number){
         return this.customerRepository.delete( idToDelete)
     
@@ -87,8 +92,40 @@ export class CustomerService {
        
     async getCustomerByEmail(emailToFind: string){
         const customer = await this.customerRepository.findOneBy({email: emailToFind})
-        if (!customer) throw new HttpException('customer with the given email cannot be found', HttpStatus.NOT_FOUND)
-        
+        //if (!customer) throw new HttpException('customer with the given email cannot be found', HttpStatus.NOT_FOUND)
+        console.log("getting customer by email: " + customer)
         return customer
     }
+    async setCurrentRefreshToken(refreshTokenToUpdate: string, userId: number) {
+        console.log("updating refresh token")
+        console.log("customer id when saving refresh token is: " + userId)
+        //const refreshToken = await bcrypt.hash(refreshTokenToUpdate, 10);
+        const refreshToken = passwordToHash(refreshTokenToUpdate)
+
+        console.log('hashed refresh token: ' + refreshToken)
+        // const customer = await this.getCustomer(userId)
+        // customer.refreshToken = refreshToken
+        // return this.customerRepository.save(customer)
+        return this.customerRepository.update(userId, { refreshToken });
+    }
+    async getUserIfRefreshTokenMatches(refreshToken: string, userId: number) {
+        console.log("checking if refresh token matches in customer service")
+        console.log("customer id when comparing refresh token is: " + userId)
+        const customer = await this.getCustomer(userId)
+        // const isRefreshTokenMatching = await bcrypt.compare( refreshToken, customer.refreshToken );
+        const isRefreshTokenMatching = comparePasswordAndHash(refreshToken, customer.refreshToken)
+        if (isRefreshTokenMatching) {
+            console.log("refresh token is identical, authorize new access token")
+          return customer;
+        } else {
+            throw new HttpException("the refresh token does not match", HttpStatus.UNAUTHORIZED)
+        }
+
+    }
+    async removeRefreshToken(userId: number) {
+        return this.customerRepository.update(userId, {
+          refreshToken: null
+        });
+      }
+
 }

@@ -16,9 +16,9 @@ export class CustomerController {
     @UseGuards(JwtAuthenGuard)
     @Get('id/:id')
     getCustomer(@Param('id', ParseIntPipe) idToFind: number,@Req() request){
-        if (request.user.id != idToFind) {
-            throw new HttpException('customer cannot get profiles belonging to other users', HttpStatus.UNAUTHORIZED)
-        }
+        // if (request.user.id != idToFind) {
+        //     throw new HttpException('customer cannot get profiles belonging to other users', HttpStatus.UNAUTHORIZED)
+        // }
         return this.customerService.getCustomer(idToFind);
     }
     @Get('id/:id/favorites')

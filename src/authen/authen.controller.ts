@@ -1,31 +1,60 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Post, UseGuards, UsePipes, ValidationPipe, Res, Req, ParseIntPipe, Query} from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Post, UseGuards, UsePipes, ValidationPipe, Res, Req, ParseIntPipe, Query, ClassSerializerInterceptor, UseInterceptors} from '@nestjs/common';
 import { AuthenService } from './authen.service';
 import { loginDto, registerDto } from 'src/DTOs/AuthenDto';
 import { LocalAuthenGuard, LoginGuard } from './authen.guard';
 import { Request, Response } from 'express'
-@Controller('authen')
-export class AuthenController {
-    constructor(private authenService: AuthenService) {}
+import { InjectRepository } from '@nestjs/typeorm';
+import { CustomerEntity } from 'src/TypeOrms/CustomerEntity';
+import { Repository } from 'typeorm';
+import { CustomerService } from 'src/customer/customer.service';
+import JwtRefreshGuard from './authenRefresh.guard';
 
+
+@Controller('authen')
+@UseInterceptors(ClassSerializerInterceptor)
+export class AuthenController {
+    constructor(
+      private authenService: AuthenService,
+      private readonly customerService: CustomerService,
+
+    ){}
     @HttpCode(200)
     @UseGuards(LocalAuthenGuard)
     @Post('general/login')
-    async logIn(@Req() request, @Res() response: Response) {
-      console.log("the user in the controller: ")
-      //console.log(request.user)
+    logIn(@Req() request) {
+      //console.log("the user in the general login controller: ")
+      console.log(request.user)
       const user = request.user;
-      const cookie = this.authenService.getCookieWithJwtToken(user);
-      console.log(" the cookie is: " + cookie)
-      response.setHeader('Set-Cookie', cookie);
-      //response.cookie("access_token", "who let the dogs out")
-      //response.headers.set('Set-Cookie', cookie)
-      console.log("sending cookie and user info")
-      return response.send(user);
-    }
+    const accessTokenCookie = this.authenService.getCookieWithJwtAccessToken(user);
+    const refreshTokenCookie = this.authenService.getCookieWithJwtRefreshToken(user);
+
+    // console.log("access cookie in authen controller login: " + accessTokenCookie)
+    // console.log("refresh cookie in authen controller login: " + refreshTokenCookie)
+
+    //await this.customerService.setCurrentRefreshToken(refreshTokenCookie.token, user.id);
+ 
+    request.res.setHeader('Set-Cookie', [accessTokenCookie, refreshTokenCookie]);
+
+    //response.headers.set('Set-Cookie', accessCookie)
     
+    console.log("sending cookie and user info")
+    return user;
+      
+    }
+
+    @UseGuards(JwtRefreshGuard)
+    @Get('refresh')
+    refresh(@Req() request) {
+      const accessCookie = this.authenService.getCookieWithJwtAccessToken(request.user);
+  
+      request.res.setHeader('Set-Cookie', accessCookie);
+      return request.user;
+    }
+
     @Post('logout')
     async logOut(@Req() request, @Res() response: Response) {
       console.log("loging out controller")
+      await this.customerService.removeRefreshToken(request.user.id);
       const cookie = this.authenService.getCookieForLogOut();
       response.setHeader('Set-Cookie', cookie);
       return response.sendStatus(200);

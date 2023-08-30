@@ -65,17 +65,16 @@ export class SalonService {
         const salons = await this.salonRepository.find({relations: ['appointments']});
         for (var i = 0; i < salons.length; i++){
             const salonTypesArray = salons[i].salonTypes.split(',')
-            console.log("filter array: " + filterArray);
-            console.log("salon type array: " + salonTypesArray)
+            // console.log("filter array: " + filterArray);
+            // console.log("salon type array: " + salonTypesArray)
             if ( filterArray.some((type) => salonTypesArray.includes(type) ) ){
                 console.log("found salon type in salonTypes")
                 filteredSalon.push(salons[i])
             }
 
         }
-
-        const salonToReturn = this.formatAndSortSalons(filteredSalon, sortOption)
-        const salonPage = this.customPagination(salonToReturn, pageSize, pageNumber)
+        const salonToReturn = await this.formatAndSortSalons(filteredSalon, sortOption)
+        const salonPage = await this.customPagination(salonToReturn, pageSize, pageNumber)
         return salonPage
     }
     
@@ -358,6 +357,10 @@ export class SalonService {
                 for (var j = 0 ; j < photoArray.length; j++) {
                     newPhotoStr += photoArray[j] + ','
                 }
+                
+                if (newPhotoStr.charAt(newPhotoStr.length - 1) == ','){
+                    newPhotoStr = newPhotoStr.substring(0, newPhotoStr.length - 1)
+                }
                 salonToUpdate.salonPhotos = newPhotoStr
                 console.log("new photo string: " + newPhotoStr)
                 return this.salonRepository.save(salonToUpdate);
@@ -417,8 +420,8 @@ export class SalonService {
     async formatSalonForDisplay(salon) {
         console.log("current salon: " + salon.salonName)
         let appointmentIdList: number[] = []
-        console.log("the salons appointments: " + salon.appointments)
-        console.log('the length of the salons appointments:' + salon.appointments.length)
+        //console.log("the salons appointments: " + salon.appointments)
+        //console.log('the length of the salons appointments: ' + salon.appointments.length)
         for ( var i = 0; i < salon.appointments.length; i++) {
             appointmentIdList.push(salon.appointments[i].id)
         }
@@ -489,15 +492,17 @@ export class SalonService {
         
         // console.log("salon to return------------")
         // console.log(salonToReturn)
-
+        // console.log('returning the formatted salon')
         return salonFormatted
     }
     customPagination(salons, pageSize: number, pageNumber: number){
         // console.log('page number: ' + pageNumber)
         // console.log('page size: ' + pageSize)
+       
         var salonPage = []
         for (var pageStartIndex = (pageNumber - 1) * pageSize; pageStartIndex < pageSize * pageNumber; pageStartIndex++){
             // console.log('loop number: ' + pageStartIndex)
+            // console.log("custom pagination salon added to page: " + salons[pageStartIndex])
             salonPage.push(salons[pageStartIndex])
             // console.log(salonList[pageStartIndex].salonRating)
         }
@@ -505,13 +510,14 @@ export class SalonService {
     }
     async formatAndSortSalons(salons, sortOption?: string){
         var formattedSalons = []
+        // console.log("number of salons to format:" + salons.length)
         for (var i = 0; i < salons.length; i++){
-            console.log("curent formatting salon: " + salons[i].id)
+            // console.log("current formatting salon: " + salons[i].id)
             let salonToReturn = await this.formatSalonForDisplay(salons[i])
             formattedSalons.push(salonToReturn)
         }
         //salonsToReturn.sort((a, b) => a.salonRating + b.salonRating);
-        //console.log(foundList)
+        // console.log("number of salons formated: " + formattedSalons.length)
         let sortedSalons = []
         if (sortOption == 'alphabetical') {
             sortedSalons = this.quickSortSalonName(formattedSalons)
@@ -519,10 +525,12 @@ export class SalonService {
             sortedSalons = this.quickSortSalonRating(formattedSalons)
         }
         if (!sortOption) {
-            console.log("no sorting options specified, returning formatted salons with default sorting")
-            return formattedSalons
+            // console.log("no sorting options specified, returning formatted salons with default sorting")
+            // console.log("formatted and sorted by default option salon list: " + sortedSalons)
+            return sortedSalons
         } else {
-            console.log("returning formatted salons sorted by options")
+            // console.log("returning formatted salons sorted by options")
+            // console.log("formatted and sorted by option salon list: " + sortedSalons)
             return sortedSalons
         }
     }

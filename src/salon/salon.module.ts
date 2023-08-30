@@ -8,6 +8,7 @@ import { ReviewEntity } from 'src/TypeOrms/ReviewEntity';
 @Module({
   imports: [TypeOrmModule.forFeature([SalonEntity, ReviewEntity])],
   controllers: [SalonController],
-  providers: [SalonService]
+  providers: [SalonService],
+  exports: [SalonService]
 })
 export class SalonModule {}

@@ -11,6 +11,9 @@ import { ManagerEntity } from 'src/TypeOrms/ManagerEntity';
 import { Repository } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import { SalonEntity } from 'src/TypeOrms/SalonEntity';
+import * as bcrypt from 'bcrypt';
+import { SalonService } from 'src/salon/salon.service';
+
 @Injectable()
 export class AuthenService {
     //constructor(@Inject('USER_SERVICE') private readonly userService: UserService){}
@@ -19,72 +22,101 @@ export class AuthenService {
     @InjectRepository(ManagerEntity) private managerRepository: Repository<ManagerEntity>,
     @InjectRepository(SalonEntity) private salonRepository: Repository<SalonEntity>,
     private jwtService: JwtService,
-    private readonly configService: ConfigService
+    private readonly configService: ConfigService,
+    private readonly customerService: CustomerService,
+    private readonly managerService: ManagerService,
+    private readonly salonService: SalonService
+
   ) {}
   
-  public getCookieWithJwtToken(user: ManagerEntity | CustomerEntity) {
+  getCookieWithJwtAccessToken(user: ManagerEntity | CustomerEntity) {
     console.log("getting cookie with access token")
-    console.log("user in cookie creator")
+    //console.log("user in cookie creator")
     const payload = { sub: user.id, fullName: user.firstname + ' ' +  user.lastname, email: user.email, role: user.role};
-    const token = this.jwtService.sign(payload);
-    console.log('jwt token expiration time: ' + this.configService.get('JWT_EXPIRATION_TIME'))
-    return `Authentication=${token}; HttpOnly; Path=/; Max-Age=${this.configService.get('JWT_EXPIRATION_TIME') * 60}`;
+    // console.log("payload in get cookie with access token: " + payload.role)
+    const token = this.jwtService.sign(payload, {
+      secret: this.configService.get('JWT_ACCESS_TOKEN_SECRET'),
+      expiresIn: `${this.configService.get('JWT_ACCESS_TOKEN_EXPIRATION_TIME')}s`
+    });
+    //console.log('jwt access token expiration time: ' + this.configService.get('JWT_ACCESS_TOKEN_EXPIRATION_TIME'))
+    return `Authentication=${token}; HttpOnly; Path=/; Max-Age=${this.configService.get('JWT_ACCESS_TOKEN_EXPIRATION_TIME') * 1}`;
+
   }
+  getCookieWithJwtRefreshToken(user: ManagerEntity | CustomerEntity) {
+    console.log("getting the cookie with refresh token")
+    const payload = { sub: user.id, fullName: user.firstname + ' ' +  user.lastname, email: user.email, role: user.role};
+    // console.log("payload in get cookie with refresh token: " + payload.role)
+    const token = this.jwtService.sign(payload, {
+      secret: this.configService.get('JWT_REFRESH_TOKEN_SECRET'),
+      expiresIn: `${this.configService.get('JWT_REFRESH_TOKEN_EXPIRATION_TIME') * 60}s`
+    });
+    this.customerService.setCurrentRefreshToken(token, user.id);
+    
+    return `Refresh=${token}; HttpOnly; Path=/; Max-Age=${this.configService.get('JWT_REFRESH_TOKEN_EXPIRATION_TIME') * 60}`;
+
+    // const cookie = `Refresh=${token}; HttpOnly; Path=/authen/refresh; Max-Age=${this.configService.get('JWT_REFRESH_TOKEN_EXPIRATION_TIME') * 60}`;
+    
+    // return {
+    //   cookie,
+    //   token
+    // }
+    
+  }
+  
+
   public getCookieForLogOut() {
-    return `Authentication=; HttpOnly; Path=/; Max-Age=0`;
+    return [
+      'Authentication=; HttpOnly; Path=/; Max-Age=0',
+      'Refresh=; HttpOnly; Path=/; Max-Age=0'
+    ];
   }
   async generalRegister(newUser: registerDto, salonId?: number){
+    const manager = await this.managerService.getManagerByEmail(newUser.email)
+    console.log('new user email: ' + newUser.email)
+    console.log('manager email: ' + manager) 
+    if (manager) throw new HttpException("email already exist in manager database", HttpStatus.BAD_REQUEST)
+    // const customer = await this.managerRepository.findOneBy({email: newUser.email})
+    const customer = await this.customerService.getCustomerByEmail(newUser.email)
+    if (customer) throw new HttpException("email already exist in customer database", HttpStatus.BAD_REQUEST)
+    const password = passwordToHash(newUser.password)
     if (newUser.role == RoleEnum.Customer){
-
-      const manager = await this.managerRepository.findOneBy({email: newUser.email})
-      if (manager) throw new HttpException("email already exist in manager database", HttpStatus.BAD_REQUEST)
-      const customer = await this.managerRepository.findOneBy({email: newUser.email})
-      if (customer) throw new HttpException("email already exist in customer database", HttpStatus.BAD_REQUEST)
-
-      const password = passwordToHash(newUser.password)
-      
-      const customerToSave = this.customerRepository.create({...newUser, password});
-      return this.customerRepository.save(customerToSave)
+      // const customerToSave = this.customerRepository.create({...newUser, password});
+      // return this.customerRepository.save(customerToSave)
+      const customerToSave = await this.customerService.registerCustomer({...newUser, password, role: RoleEnum.Customer})
+      return customerToSave
     } else if (newUser.role = RoleEnum.Manager) {
-
-      const manager = await this.managerRepository.findOneBy({email: newUser.email})
-      if (manager) throw new HttpException("email already exist in manager database", HttpStatus.BAD_REQUEST)
-      const customer = await this.managerRepository.findOneBy({email: newUser.email})
-      if (customer) throw new HttpException("email already exist in customer database", HttpStatus.BAD_REQUEST)
-      const salonToUpdate = await this.salonRepository.findOneBy({id: salonId})
-      if (!salonToUpdate) throw new HttpException('salon cannot be found to assign new manager', HttpStatus.NOT_FOUND)
+      
+      const salonToUpdate = await this.salonService.getSalon(salonId)
+      //if (!salonToUpdate) throw new HttpException('salon cannot be found to assign new manager', HttpStatus.NOT_FOUND)
 
       if (salonToUpdate.manager != null) {
         throw new HttpException("salon already has a manager, only the manager salon can update new manager", HttpStatus.BAD_REQUEST)
       }
 
-      const password = passwordToHash(newUser.password)
-      const managerToSave = this.managerRepository.create({...newUser, password});
-      const savedManager = await this.managerRepository.save(managerToSave)
-  
-      salonToUpdate.manager = savedManager
-      const updatedSalon = await this.salonRepository.save(salonToUpdate)
-      console.log('this is the updated salon with new manager')
-      // console.log(updatedSalon)
+      // const managerToSave = this.managerRepository.create({...newUser, password});
+      // const savedManager = await this.managerRepository.save(managerToSave)
+      const managertoSave = await this.managerService.registerManager(salonId, newUser)
 
-      return savedManager
+      return managertoSave
 
 
     }
   }
 
-async generalLogin(signInDetails: loginDto){
+async generalLogin(loginDetails: loginDto){
     console.log("cheking login detail in authen service")
-    const customer = await this.customerRepository.findOneBy({email: signInDetails.email})
-    const manager = await this.managerRepository.findOneBy({email: signInDetails.email})
+    const manager = await this.managerService.getManagerByEmail(loginDetails.email)
+    const customer = await this.customerService.getCustomerByEmail(loginDetails.email)
     // let payload
     if(customer) {
+      console.log("the user is a customer")
       // payload = { sub: customer.id, fullName: customer.firstname + ' ' + customer.lastname, email: customer.email, roles: customer.role};
       // if (comparePasswordAndHash(signInDetails.password, customer.password) == false) {
       //   throw new UnauthorizedException();
       // }
       return customer
     } else if (manager) {
+      console.log("the user is a manager")
       // payload = { sub: manager.id, fullName: manager.firstname + ' ' +  manager.lastname, email: manager.email, role: manager.role};
       // if (comparePasswordAndHash(signInDetails.password, manager.password) == false) {
       //   throw new UnauthorizedException();

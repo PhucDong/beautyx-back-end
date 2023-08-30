@@ -8,7 +8,7 @@ import { Request } from 'express';
 import { JwtService } from "@nestjs/jwt";
 import { ConfigService } from "@nestjs/config";
 @Injectable()
-export class JwtStrategy extends PassportStrategy(Strategy) {
+export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   
   constructor(
     private readonly customerService: CustomerService,
@@ -22,13 +22,14 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         //console.log("the cookie is: " + request?.cookies)
         return request?.cookies?.Authentication;
       }]),
-      secretOrKey: configService.get('JWT_SECRET')
+      secretOrKey: configService.get('JWT_ACCESS_TOKEN_SECRET')
     });
   }
  
   async validate(payload) {
     console.log("the payload in jwt strategy validate is: " + payload.sub, + ' ' + payload.fullName + ' ' + payload.role)
     console.log("validating access token from cookie in jwt strategy")
+    console.log("user role: " + payload.role)
     if (payload.role == RoleEnum.Manager){
         const managerToReturn = await this.managerService.getManager(payload.sub);
         console.log("manager found with payload in jwt strategy: " + managerToReturn.firstname)

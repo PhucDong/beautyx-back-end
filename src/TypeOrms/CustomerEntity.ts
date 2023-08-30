@@ -4,6 +4,7 @@ import { AppointmentEntity } from "./AppointmentEntity";
 import { Profile } from "./Profile";
 import { SalonEntity } from "./SalonEntity";
 import { RoleEnum } from "src/Custom Decorator/roles.decorator";
+import { Exclude } from "class-transformer";
 
 @Entity()
 export class CustomerEntity extends Profile{
@@ -18,6 +19,20 @@ export class CustomerEntity extends Profile{
     })
     serviceUsageTime: number
 
+    //@Exclude()
+    @Column({
+        nullable: false,
+        //unique: true
+    })
+    password: string
+
+    //@Exclude()
+    @Column({
+        nullable: true,
+        //unique: true
+    })
+    refreshToken: string;
+    
     @Column()
     customerPhotos: string;
 
@@ -30,12 +45,8 @@ export class CustomerEntity extends Profile{
     @ManyToMany(() => SalonEntity)
     @JoinTable()
     salons: SalonEntity[]
+
     
-    @Column({
-        nullable: false,
-        //unique: true
-    })
-    password: string
 
 
 
