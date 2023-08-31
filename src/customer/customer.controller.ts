@@ -1,8 +1,12 @@
-import { Body, Controller, Delete, Get, HttpException, HttpStatus, Param, ParseIntPipe, Post, Put, Req, UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, HttpException, HttpStatus, Param, ParseIntPipe, Post, Put, Req, Res, UploadedFile, UseGuards, UseInterceptors, UsePipes, ValidationPipe } from '@nestjs/common';
 import { CustomerService } from './customer.service';
 import { createCustomerDto, updateCustomerDto, updateFavoriteSalonDto } from 'src/DTOs/CustomerDto';
 import JwtAuthenGuard, { LoginGuard, customerGuard } from 'src/authen/authen.guard';
 import { registerDto } from 'src/DTOs/AuthenDto';
+import { customerMulterOptions } from 'src/FileUpload';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { Response } from 'express';
+
 
 @Controller('customer')
 export class CustomerController {
@@ -54,6 +58,24 @@ export class CustomerController {
     @Delete('delete/id/:id')
     deleteCustomer(@Param('id', ParseIntPipe) idToDelete: number,){
         return this.customerService.deleteCustomer(idToDelete)
+    }
+
+    @Post('/id/:customerId/upload/')
+    @UseInterceptors(FileInterceptor('file', customerMulterOptions ))
+    uploadWallpaper(@UploadedFile() file: Express.Multer.File, @Param('customerId', ParseIntPipe) idToUpdate: number) {
+        
+        if (!file) {
+            throw new BadRequestException('File is not an image');
+        } else {
+            //console.log("the file name of the picture in the upload controller: " + file.filename)
+            return this.customerService.updateCustomerPhoto(idToUpdate, file)
+            
+        }
+    }
+    
+    @Get('pictures/:filename')
+    async getPicture(@Param('filename') fileName, @Res() res: Response) {
+        res.sendFile(fileName, {root: './pics'});
     }
 
 }

@@ -34,7 +34,7 @@ export class CustomerEntity extends Profile{
     refreshToken: string;
     
     @Column()
-    customerPhotos: string;
+    customerPhoto: string;
 
     @OneToMany(() => ReviewEntity, (review) => review.customer)
     reviews: ReviewEntity[]

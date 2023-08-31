@@ -7,7 +7,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { Request, Response } from 'express';
 import { SalonTypeEnum } from 'src/constants';
-import { multerOptions } from 'src/FileUpload';
+import { salonMulterOptions } from 'src/FileUpload';
 
 @Controller('salon')
 export class SalonController {
@@ -107,7 +107,7 @@ export class SalonController {
     }
 
     @Post('/id/:salonId/upload/:imageType')
-    @UseInterceptors(FileInterceptor('file', multerOptions ))
+    @UseInterceptors(FileInterceptor('file', salonMulterOptions ))
     uploadWallpaper(@UploadedFile() file: Express.Multer.File, @Param('salonId', ParseIntPipe) idToUpdate: number) {
         
         if (!file) {

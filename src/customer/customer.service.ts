@@ -8,6 +8,7 @@ import { SalonEntity } from 'src/TypeOrms/SalonEntity';
 import { comparePasswordAndHash, passwordToHash } from 'src/authen/bcrypt';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
+import * as fs from 'fs';
 
 
 @Injectable()
@@ -89,7 +90,41 @@ export class CustomerService {
         return this.customerRepository.delete( idToDelete)
     
     }
-       
+    async updateCustomerPhoto(idToUpdate: number, file: Express.Multer.File){
+        console.log("file name in the update customer photo service: " + file.filename)
+        const customerToUpdate = await this.customerRepository.findOne({where: {id: idToUpdate}})
+
+        if (!customerToUpdate) throw new HttpException('the customer with the given id cannot be found to update it\'s photos', HttpStatus.NOT_FOUND)
+        const photoName = file.filename
+        console.log('customer photo string: ' + customerToUpdate.customerPhoto)
+        console.log('new photo name: ' + photoName)
+        if (customerToUpdate.customerPhoto == null){
+            console.log("customer photo string is null")
+            customerToUpdate.customerPhoto = photoName
+            return this.salonRepository.save(customerToUpdate);
+        } else {
+            console.log("the customer photo is not empty")
+            const oldPath = './pics/' + customerToUpdate.customerPhoto
+            console.log('photo old path: ' + oldPath)
+            if (fs.existsSync(oldPath)) {
+                fs.unlink(oldPath, (err) => {
+                    if (err) {
+                        console.error(err);
+                        return err;
+                    }
+                });
+            }
+            console.log("photo name 1: " + customerToUpdate.customerPhoto)
+            customerToUpdate.customerPhoto = file.filename
+            console.log("photo name 2: " + customerToUpdate.customerPhoto)
+
+            return this.customerRepository.save(customerToUpdate)
+        }
+        
+
+    }
+
+
     async getCustomerByEmail(emailToFind: string){
         const customer = await this.customerRepository.findOneBy({email: emailToFind})
         //if (!customer) throw new HttpException('customer with the given email cannot be found', HttpStatus.NOT_FOUND)
