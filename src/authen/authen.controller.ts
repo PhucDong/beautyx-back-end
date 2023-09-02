@@ -28,8 +28,8 @@ export class AuthenController {
     const accessTokenCookie = this.authenService.getCookieWithJwtAccessToken(user);
     const refreshTokenCookie = this.authenService.getCookieWithJwtRefreshToken(user);
 
-    // console.log("access cookie in authen controller login: " + accessTokenCookie)
-    // console.log("refresh cookie in authen controller login: " + refreshTokenCookie)
+    console.log("access cookie in authen controller login: " + accessTokenCookie)
+    console.log("refresh cookie in authen controller login: " + refreshTokenCookie)
 
     //await this.customerService.setCurrentRefreshToken(refreshTokenCookie.token, user.id);
  

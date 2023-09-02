@@ -1,7 +1,7 @@
 import { BadRequestException, Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, Query, Res, UploadedFile, UseGuards, UseInterceptors, UsePipes, ValidationPipe } from '@nestjs/common';
 import { SalonService } from './salon.service';
 import { createSalonDto, searchSalonDto, updateSalonDto, updateSalonHighLightsDto, updateSalonTypesDto, updateSalonWorkDayDto, updateSalonWorkDayListDto } from 'src/DTOs/SalonDto';
-import { LocalAuthenGuard, LoginGuard, RolesGuard } from 'src/authen/authen.guard';
+import JwtAuthenGuard, { LocalAuthenGuard, LoginGuard, RolesGuard } from 'src/authen/authen.guard';
 import { RoleEnum, Roles } from 'src/Custom Decorator/roles.decorator';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
@@ -13,8 +13,8 @@ import { salonMulterOptions } from 'src/FileUpload';
 export class SalonController {
     constructor(private readonly salonService: SalonService) {}
     
-    // @Roles(RoleEnum.Manager)
-    // @UseGuards(JwtAuthenGuard, RolesGuard)
+    @Roles(RoleEnum.Manager)
+    @UseGuards(JwtAuthenGuard, RolesGuard)
     @Get('')
     async getSalons(@Query("pageNumber", ParseIntPipe) pageNumber: number, @Query("pageSize", ParseIntPipe) pageSize: number, @Query("sortOption") sortOption?: string){
         const salons = await this.salonService.getSalons(pageSize, pageNumber, sortOption);

@@ -36,10 +36,10 @@ export class AuthenService {
     // console.log("payload in get cookie with access token: " + payload.role)
     const token = this.jwtService.sign(payload, {
       secret: this.configService.get('JWT_ACCESS_TOKEN_SECRET'),
-      expiresIn: `${this.configService.get('JWT_ACCESS_TOKEN_EXPIRATION_TIME')}s`
+      expiresIn: `${this.configService.get('JWT_ACCESS_TOKEN_EXPIRATION_TIME') * this.configService.get('JWT_ACCESS_TOKEN_EXPIRATION_TIME_BY_MINUTE')}`
     });
     //console.log('jwt access token expiration time: ' + this.configService.get('JWT_ACCESS_TOKEN_EXPIRATION_TIME'))
-    return `Authentication=${token}; HttpOnly; Path=/; Max-Age=${this.configService.get('JWT_ACCESS_TOKEN_EXPIRATION_TIME') * 1}`;
+    return `Authentication=${token}; HttpOnly; Path=/; Max-Age=${this.configService.get('JWT_ACCESS_TOKEN_EXPIRATION_TIME') * this.configService.get('JWT_ACCESS_TOKEN_EXPIRATION_TIME_BY_MINUTE')}`;
 
   }
   getCookieWithJwtRefreshToken(user: ManagerEntity | CustomerEntity) {
@@ -48,11 +48,11 @@ export class AuthenService {
     // console.log("payload in get cookie with refresh token: " + payload.role)
     const token = this.jwtService.sign(payload, {
       secret: this.configService.get('JWT_REFRESH_TOKEN_SECRET'),
-      expiresIn: `${this.configService.get('JWT_REFRESH_TOKEN_EXPIRATION_TIME') * 60}s`
+      expiresIn: `${this.configService.get('JWT_REFRESH_TOKEN_EXPIRATION_TIME') * this.configService.get('JWT_REFRESH_TOKEN_EXPIRATION_TIME_BY_MINUTE')}`
     });
     this.customerService.setCurrentRefreshToken(token, user.id);
     
-    return `Refresh=${token}; HttpOnly; Path=/; Max-Age=${this.configService.get('JWT_REFRESH_TOKEN_EXPIRATION_TIME') * 60}`;
+    return `Refresh=${token}; HttpOnly; Path=/; Max-Age=${this.configService.get('JWT_REFRESH_TOKEN_EXPIRATION_TIME') * this.configService.get('JWT_REFRESH_TOKEN_EXPIRATION_TIME_BY_MINUTE')}`;
 
     // const cookie = `Refresh=${token}; HttpOnly; Path=/authen/refresh; Max-Age=${this.configService.get('JWT_REFRESH_TOKEN_EXPIRATION_TIME') * 60}`;
     
