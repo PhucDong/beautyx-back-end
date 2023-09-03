@@ -1,5 +1,5 @@
 import { Exclude } from "class-transformer";
-import { RoleEnum } from "src/Custom Decorator/roles.decorator";
+import { RoleEnum } from "src/constants";
 import { Column, Entity, JoinColumn, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 
 export enum GenderEnum {

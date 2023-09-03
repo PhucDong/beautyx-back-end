@@ -18,9 +18,7 @@ import { SalonService } from 'src/salon/salon.service';
 export class AuthenService {
     //constructor(@Inject('USER_SERVICE') private readonly userService: UserService){}
   constructor(
-    @InjectRepository(CustomerEntity) private customerRepository: Repository<CustomerEntity>,
-    @InjectRepository(ManagerEntity) private managerRepository: Repository<ManagerEntity>,
-    @InjectRepository(SalonEntity) private salonRepository: Repository<SalonEntity>,
+  
     private jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly customerService: CustomerService,
@@ -34,25 +32,29 @@ export class AuthenService {
     //console.log("user in cookie creator")
     const payload = { sub: user.id, fullName: user.firstname + ' ' +  user.lastname, email: user.email, role: user.role};
     // console.log("payload in get cookie with access token: " + payload.role)
+    const expirationTime = `${this.configService.get('JWT_ACCESS_TOKEN_EXPIRATION_TIME') * this.configService.get('JWT_ACCESS_TOKEN_EXPIRATION_TIME_BY_MINUTE')}`
+    console.log("access token expiration time is: " + expirationTime + ' ' + typeof expirationTime)
     const token = this.jwtService.sign(payload, {
       secret: this.configService.get('JWT_ACCESS_TOKEN_SECRET'),
-      expiresIn: `${this.configService.get('JWT_ACCESS_TOKEN_EXPIRATION_TIME') * this.configService.get('JWT_ACCESS_TOKEN_EXPIRATION_TIME_BY_MINUTE')}`
+      expiresIn: `${expirationTime}s`
     });
     //console.log('jwt access token expiration time: ' + this.configService.get('JWT_ACCESS_TOKEN_EXPIRATION_TIME'))
-    return `Authentication=${token}; HttpOnly; Path=/; Max-Age=${this.configService.get('JWT_ACCESS_TOKEN_EXPIRATION_TIME') * this.configService.get('JWT_ACCESS_TOKEN_EXPIRATION_TIME_BY_MINUTE')}`;
+    return `Authentication=${token}; HttpOnly; Path=/; Max-Age=${expirationTime}`;
 
   }
   getCookieWithJwtRefreshToken(user: ManagerEntity | CustomerEntity) {
     console.log("getting the cookie with refresh token")
     const payload = { sub: user.id, fullName: user.firstname + ' ' +  user.lastname, email: user.email, role: user.role};
     // console.log("payload in get cookie with refresh token: " + payload.role)
+    const expirationTime = `${this.configService.get('JWT_REFRESH_TOKEN_EXPIRATION_TIME') * this.configService.get('JWT_REFRESH_TOKEN_EXPIRATION_TIME_BY_MINUTE')}`
+    console.log("refresh token expiration time is: " + expirationTime + ' ' + typeof expirationTime)
     const token = this.jwtService.sign(payload, {
       secret: this.configService.get('JWT_REFRESH_TOKEN_SECRET'),
-      expiresIn: `${this.configService.get('JWT_REFRESH_TOKEN_EXPIRATION_TIME') * this.configService.get('JWT_REFRESH_TOKEN_EXPIRATION_TIME_BY_MINUTE')}`
+      expiresIn: `${expirationTime}s`
     });
     this.customerService.setCurrentRefreshToken(token, user.id);
     
-    return `Refresh=${token}; HttpOnly; Path=/; Max-Age=${this.configService.get('JWT_REFRESH_TOKEN_EXPIRATION_TIME') * this.configService.get('JWT_REFRESH_TOKEN_EXPIRATION_TIME_BY_MINUTE')}`;
+    return `Refresh=${token}; HttpOnly; Path=/authen/refresh; Max-Age=${expirationTime}`;
 
     // const cookie = `Refresh=${token}; HttpOnly; Path=/authen/refresh; Max-Age=${this.configService.get('JWT_REFRESH_TOKEN_EXPIRATION_TIME') * 60}`;
     
@@ -64,39 +66,34 @@ export class AuthenService {
   }
   
 
-  public getCookieForLogOut() {
+  getCookieForLogOut() {
     return [
       'Authentication=; HttpOnly; Path=/; Max-Age=0',
-      'Refresh=; HttpOnly; Path=/; Max-Age=0'
+      'Refresh=; HttpOnly; Path=/authen/refresh; Max-Age=0'
     ];
   }
   async generalRegister(newUser: registerDto, salonId?: number){
+
     const manager = await this.managerService.getManagerByEmail(newUser.email)
-    console.log('new user email: ' + newUser.email)
-    console.log('manager email: ' + manager) 
     if (manager) throw new HttpException("email already exist in manager database", HttpStatus.BAD_REQUEST)
-    // const customer = await this.managerRepository.findOneBy({email: newUser.email})
     const customer = await this.customerService.getCustomerByEmail(newUser.email)
     if (customer) throw new HttpException("email already exist in customer database", HttpStatus.BAD_REQUEST)
+    
     const password = passwordToHash(newUser.password)
     if (newUser.role == RoleEnum.Customer){
-      // const customerToSave = this.customerRepository.create({...newUser, password});
-      // return this.customerRepository.save(customerToSave)
-      const customerToSave = await this.customerService.registerCustomer({...newUser, password, role: RoleEnum.Customer})
-      return customerToSave
-    } else if (newUser.role = RoleEnum.Manager) {
       
-      const salonToUpdate = await this.salonService.getSalon(salonId)
-      //if (!salonToUpdate) throw new HttpException('salon cannot be found to assign new manager', HttpStatus.NOT_FOUND)
+      const customerToSave = await this.customerService.registerCustomer({...newUser, password})
+      return customerToSave
 
-      if (salonToUpdate.manager != null) {
+    } else if (newUser.role = RoleEnum.Manager) {
+      const salonToUpdate = await this.salonService.getSalon(salonId)
+      console.log("new manager hashed password: " + password)
+      console.log("salon with id manager: " + salonToUpdate.manager);
+      if (salonToUpdate.manager) {
         throw new HttpException("salon already has a manager, only the manager salon can update new manager", HttpStatus.BAD_REQUEST)
       }
 
-      // const managerToSave = this.managerRepository.create({...newUser, password});
-      // const savedManager = await this.managerRepository.save(managerToSave)
-      const managertoSave = await this.managerService.registerManager(salonId, newUser)
-
+      const managertoSave = await this.managerService.registerManager(salonId, {...newUser, password})
       return managertoSave
 
 
@@ -107,21 +104,19 @@ async generalLogin(loginDetails: loginDto){
     console.log("cheking login detail in authen service")
     const manager = await this.managerService.getManagerByEmail(loginDetails.email)
     const customer = await this.customerService.getCustomerByEmail(loginDetails.email)
-    // let payload
+
     if(customer) {
       console.log("the user is a customer")
-      // payload = { sub: customer.id, fullName: customer.firstname + ' ' + customer.lastname, email: customer.email, roles: customer.role};
-      // if (comparePasswordAndHash(signInDetails.password, customer.password) == false) {
-      //   throw new UnauthorizedException();
-      // }
-      return customer
+      if (comparePasswordAndHash(loginDetails.password, customer.password) == false) {
+        throw new HttpException('Wrong customer credentials provided', HttpStatus.BAD_REQUEST);
+      } else return customer
+
     } else if (manager) {
       console.log("the user is a manager")
-      // payload = { sub: manager.id, fullName: manager.firstname + ' ' +  manager.lastname, email: manager.email, role: manager.role};
-      // if (comparePasswordAndHash(signInDetails.password, manager.password) == false) {
-      //   throw new UnauthorizedException();
-      // }
-      return manager
+      if (comparePasswordAndHash(loginDetails.password, manager.password) == false) {
+        throw new HttpException('Wrong manager credentials provided', HttpStatus.BAD_REQUEST);
+      } else return manager
+
     } else {
       throw new HttpException("cannot find any user with the email in the databases", HttpStatus.NOT_FOUND)
     }

@@ -3,13 +3,14 @@ import { CanActivate, ExecutionContext, Injectable, UnauthorizedException, } fro
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
 import { Reflector } from '@nestjs/core';
-import { ROLES_KEY, RoleEnum } from 'src/Custom Decorator/roles.decorator';
+import { ROLES_KEY } from 'src/Custom Decorator/roles.decorator';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CustomerEntity } from 'src/TypeOrms/CustomerEntity';
 import { SalonEntity } from 'src/TypeOrms/SalonEntity';
 import { Repository } from 'typeorm';
 import { AuthGuard } from '@nestjs/passport';
 import { ConfigService } from '@nestjs/config';
+import { RoleEnum } from 'src/constants';
   
 @Injectable()
 export class LoginGuard implements CanActivate {
@@ -95,7 +96,5 @@ export class customerGuard implements CanActivate {
 @Injectable()
 export class LocalAuthenGuard extends AuthGuard('local') {}
 
-@Injectable()
-export default class JwtAuthenGuard extends AuthGuard('jwt') {}
 
 

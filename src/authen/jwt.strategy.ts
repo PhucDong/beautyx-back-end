@@ -8,7 +8,7 @@ import { Request } from 'express';
 import { JwtService } from "@nestjs/jwt";
 import { ConfigService } from "@nestjs/config";
 @Injectable()
-export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
+export class JwtStrategy extends PassportStrategy(Strategy) {
   
   constructor(
     private readonly customerService: CustomerService,
@@ -19,7 +19,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([(request: Request) => {
         console.log("extracting jwt from request ")
-        //console.log("the cookie is: " + request?.cookies)
+        console.log("the cookie is: " + request?.cookies?.Authentication)
         return request?.cookies?.Authentication;
       }]),
       secretOrKey: configService.get('JWT_ACCESS_TOKEN_SECRET')
@@ -27,16 +27,15 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   }
  
   async validate(payload) {
-    console.log("the payload in jwt strategy validate is: " + payload.sub, + ' ' + payload.fullName + ' ' + payload.role)
     console.log("validating access token from cookie in jwt strategy")
-    console.log("user role: " + payload.role)
+    console.log("the payload in jwt strategy validate is: " + payload.sub + ' ' + payload.fullName + ' ' + payload.role)
     if (payload.role == RoleEnum.Manager){
-        const managerToReturn = await this.managerService.getManager(payload.sub);
-        console.log("manager found with payload in jwt strategy: " + managerToReturn.firstname)
-        return managerToReturn
+      const managerToReturn = await this.managerService.getManager(payload.sub);
+      console.log("manager found with payload in jwt strategy: " + managerToReturn.id + ' ' +  managerToReturn.firstname)
+      return managerToReturn
     } else if (payload.role == RoleEnum.Customer){
       const customerToReturn = await this.customerService.getCustomer(payload.sub);
-      console.log("customer found with payload in jwt strategy: " + customerToReturn.firstname)
+      console.log("customer found with payload in jwt strategy: " + customerToReturn.id + ' ' + customerToReturn.firstname)
       return customerToReturn
     }
   }

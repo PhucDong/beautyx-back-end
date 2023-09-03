@@ -15,11 +15,11 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
   }
   async validate(email: string, password: string) {
     console.log("validating login details in local strategy")
-    const signInDetails: loginDto = {
+    const loginDetails: loginDto = {
         email: email,
         password: password
     }
-    return this.authenService.generalLogin(signInDetails);
+    return this.authenService.generalLogin(loginDetails);
   }
 
 //   async validateCustomer(email: string, password: string) {

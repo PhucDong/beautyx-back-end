@@ -10,4 +10,9 @@ export class ManagerEntity extends Profile{
     })
     password: string
     
+    @Column({
+        nullable: true,
+        //unique: true
+    })
+    refreshToken: string;
 }

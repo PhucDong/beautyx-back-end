@@ -3,8 +3,6 @@ import { ReviewEntity } from "./ReviewEntity";
 import { AppointmentEntity } from "./AppointmentEntity";
 import { Profile } from "./Profile";
 import { SalonEntity } from "./SalonEntity";
-import { RoleEnum } from "src/Custom Decorator/roles.decorator";
-import { Exclude } from "class-transformer";
 
 @Entity()
 export class CustomerEntity extends Profile{
@@ -33,7 +31,9 @@ export class CustomerEntity extends Profile{
     })
     refreshToken: string;
     
-    @Column()
+    @Column({
+        nullable: true,
+    })
     customerPhoto: string;
 
     @OneToMany(() => ReviewEntity, (review) => review.customer)

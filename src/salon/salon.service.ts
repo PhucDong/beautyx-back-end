@@ -171,7 +171,7 @@ export class SalonService {
     }
 
     async getSalon(idToFind: number){
-        const salon = await this.salonRepository.findOne({relations: ['appointments'], where: {id: idToFind}});
+        const salon = await this.salonRepository.findOne({relations: ['appointments', 'manager'], where: {id: idToFind}});
         if (!salon) throw new HttpException('the salon with the given id cannot be found', HttpStatus.NOT_FOUND)
 
         const salonToReturn = this.formatSalonForDisplay(salon)

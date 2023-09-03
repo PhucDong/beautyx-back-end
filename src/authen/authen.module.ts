@@ -21,10 +21,16 @@ import { SalonModule } from 'src/salon/salon.module';
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) => {
         return {
-          signOptions: { expiresIn: `${configService.get('JWT_EXPIRATION_TIME')}s` },
-          secret: configService.get<string>('JWT_SECRET'),
+          signOptions: { expiresIn: `${configService.get('JWT_ACCESS_TOKEN_EXPIRATION_TIME') * configService.get('JWT_ACCESS_TOKEN_EXPIRATION_TIME_BY_MINUTE')}` },
+          secret: configService.get<string>('JWT_ACCESS_TOKEN_SECRET'),
         };
       }
+      // useFactory: async (configService: ConfigService) => ({
+      //   secret: configService.get<string>('JWT_ACCESS_TOKEN_SECRET'),
+      //   signOptions: { 
+      //     expiresIn: `${configService.get('JWT_ACCESS_TOKEN_EXPIRATION_TIME') * configService.get('JWT_ACCESS_TOKEN_EXPIRATION_TIME_BY_MINUTE')}` 
+      //   },
+      // }),
     }),
     CustomerModule, ManagerModule, SalonModule, PassportModule, ConfigModule],
   controllers: [AuthenController],

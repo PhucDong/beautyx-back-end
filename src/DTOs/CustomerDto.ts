@@ -1,7 +1,7 @@
 import { IsDateString, IsEmail, IsEmpty, IsEnum, IsNotEmpty, IsNumber, IsNumberString } from "class-validator"
-import { RoleEnum } from "src/Custom Decorator/roles.decorator"
 import { GenderEnum } from "src/TypeOrms/Profile"
 import { SalonEntity } from "src/TypeOrms/SalonEntity"
+import { RoleEnum } from "src/constants"
 
 export class createCustomerDto{
     //user section
@@ -70,8 +70,8 @@ export class updateCustomerDto{
  
     salon: SalonEntity[]
 
-    @IsEnum(RoleEnum)
-    roles: RoleEnum[]
+    // @IsEnum(RoleEnum)
+    // roles: RoleEnum[]
 
 }   
 

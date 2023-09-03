@@ -1,6 +1,5 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { RoleEnum } from 'src/Custom Decorator/roles.decorator';
 import { registerDto } from 'src/DTOs/AuthenDto';
 import { createCustomerDto, updateCustomerDto, updateFavoriteSalonDto } from 'src/DTOs/CustomerDto';
 import { CustomerEntity } from 'src/TypeOrms/CustomerEntity';
@@ -9,6 +8,7 @@ import { comparePasswordAndHash, passwordToHash } from 'src/authen/bcrypt';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import * as fs from 'fs';
+import { RoleEnum } from 'src/constants';
 
 
 @Injectable()
@@ -42,7 +42,8 @@ export class CustomerService {
         return this.customerRepository.save(customerToSave)
     }
     registerCustomer(newCustomer: registerDto){
-        return this.customerRepository.save(newCustomer)
+        const customerToSave = this.customerRepository.create({...newCustomer, role: RoleEnum.Customer})
+        return this.customerRepository.save(customerToSave)
     }
 
     updateCustomer(idToUpdate: number, updateDetails: updateCustomerDto){
@@ -147,6 +148,7 @@ export class CustomerService {
         console.log("checking if refresh token matches in customer service")
         console.log("customer id when comparing refresh token is: " + userId)
         const customer = await this.getCustomer(userId)
+        // const customer = await this.customerRepository.findOneBy({id: userId})
         // const isRefreshTokenMatching = await bcrypt.compare( refreshToken, customer.refreshToken );
         const isRefreshTokenMatching = comparePasswordAndHash(refreshToken, customer.refreshToken)
         if (isRefreshTokenMatching) {
@@ -159,8 +161,8 @@ export class CustomerService {
     }
     async removeRefreshToken(userId: number) {
         return this.customerRepository.update(userId, {
-          refreshToken: null
+          refreshToken: ""
         });
-      }
+    }
 
 }

@@ -1,11 +1,12 @@
 import { BadRequestException, Body, Controller, Delete, Get, HttpException, HttpStatus, Param, ParseIntPipe, Post, Put, Req, Res, UploadedFile, UseGuards, UseInterceptors, UsePipes, ValidationPipe } from '@nestjs/common';
 import { CustomerService } from './customer.service';
 import { createCustomerDto, updateCustomerDto, updateFavoriteSalonDto } from 'src/DTOs/CustomerDto';
-import JwtAuthenGuard, { LoginGuard, customerGuard } from 'src/authen/authen.guard';
 import { registerDto } from 'src/DTOs/AuthenDto';
 import { customerMulterOptions } from 'src/FileUpload';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Response } from 'express';
+import JwtAuthenGuard from 'src/authen/authenAccess.guard';
+import { RolesGuard } from 'src/authen/authen.guard';
 
 
 @Controller('customer')
@@ -17,7 +18,7 @@ export class CustomerController {
         const customers = await this.customerService.getCustomers();
         return customers
     }
-    @UseGuards(JwtAuthenGuard)
+    @UseGuards(JwtAuthenGuard, RolesGuard)
     @Get('id/:id')
     getCustomer(@Param('id', ParseIntPipe) idToFind: number,@Req() request){
         // if (request.user.id != idToFind) {

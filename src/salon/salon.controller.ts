@@ -1,13 +1,14 @@
 import { BadRequestException, Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, Query, Res, UploadedFile, UseGuards, UseInterceptors, UsePipes, ValidationPipe } from '@nestjs/common';
 import { SalonService } from './salon.service';
 import { createSalonDto, searchSalonDto, updateSalonDto, updateSalonHighLightsDto, updateSalonTypesDto, updateSalonWorkDayDto, updateSalonWorkDayListDto } from 'src/DTOs/SalonDto';
-import JwtAuthenGuard, { LocalAuthenGuard, LoginGuard, RolesGuard } from 'src/authen/authen.guard';
-import { RoleEnum, Roles } from 'src/Custom Decorator/roles.decorator';
+import { Roles } from 'src/Custom Decorator/roles.decorator';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { Request, Response } from 'express';
-import { SalonTypeEnum } from 'src/constants';
+import { RoleEnum, SalonTypeEnum } from 'src/constants';
 import { salonMulterOptions } from 'src/FileUpload';
+import { RolesGuard } from 'src/authen/authen.guard';
+import JwtAuthenGuard from 'src/authen/authenAccess.guard';
 
 @Controller('salon')
 export class SalonController {

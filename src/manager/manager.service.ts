@@ -4,7 +4,7 @@ import { registerDto } from 'src/DTOs/AuthenDto';
 import { createManagerDto } from 'src/DTOs/ManagerDto';
 import { ManagerEntity } from 'src/TypeOrms/ManagerEntity';
 import { SalonEntity } from 'src/TypeOrms/SalonEntity';
-import { passwordToHash } from 'src/authen/bcrypt';
+import { comparePasswordAndHash, passwordToHash } from 'src/authen/bcrypt';
 import { RoleEnum } from 'src/constants';
 import { Repository } from 'typeorm';
 
@@ -46,7 +46,7 @@ export class ManagerService {
         const salonToUpdate = await this.salonRepository.findOneBy({id: salonId})
         if (!salonToUpdate) throw new HttpException('salon cannot be found to assign new manager', HttpStatus.NOT_FOUND)
         
-        const managerToSave = this.managerRepository.create({...newManager});
+        const managerToSave = this.managerRepository.create({...newManager, role: RoleEnum.Manager});
         // console.log('this is the manager-------------created');
         // console.log(managerToSave)
         const savedManager = await this.managerRepository.save(managerToSave)
@@ -72,4 +72,36 @@ export class ManagerService {
         console.log("getting manager by email: " + manager)
         return manager
     }
+    async setCurrentRefreshToken(refreshTokenToUpdate: string, userId: number) {
+        console.log("updating refresh token")
+        console.log("manager id when saving refresh token is: " + userId)
+        //const refreshToken = await bcrypt.hash(refreshTokenToUpdate, 10);
+        const refreshToken = passwordToHash(refreshTokenToUpdate)
+
+        console.log('hashed refresh token: ' + refreshToken)
+        // const customer = await this.getCustomer(userId)
+        // customer.refreshToken = refreshToken
+        // return this.customerRepository.save(customer)
+        return this.managerRepository.update(userId, { refreshToken });
+    }
+    async getUserIfRefreshTokenMatches(refreshToken: string, userId: number) {
+        console.log("checking if refresh token matches in customer service")
+        console.log("customer id when comparing refresh token is: " + userId)
+        const manager = await this.getManager(userId)
+        // const isRefreshTokenMatching = await bcrypt.compare( refreshToken, customer.refreshToken );
+        const isRefreshTokenMatching = comparePasswordAndHash(refreshToken, manager.refreshToken)
+        if (isRefreshTokenMatching) {
+            console.log("refresh token is identical, authorize new access token")
+          return manager;
+        } else {
+            throw new HttpException("the refresh token does not match", HttpStatus.UNAUTHORIZED)
+        }
+
+    }
+    async removeRefreshToken(userId: number) {
+        return this.managerRepository.update(userId, {
+          refreshToken: null
+        });
+    }
+
 }
