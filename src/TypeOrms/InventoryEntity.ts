@@ -17,6 +17,10 @@ export class InventoryEntity {
     @Column()
     inventoryVolume: number
 
-    @ManyToOne(() => SalonEntity, (salon) => salon.inventories)
+    @ManyToOne(() => SalonEntity, (salon) => salon.inventories
+    // ,{ 
+    //     onDelete: 'CASCADE' 
+    // }
+    )
     salon: SalonEntity
 }

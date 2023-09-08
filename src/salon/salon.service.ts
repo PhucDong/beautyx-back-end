@@ -453,10 +453,26 @@ export class SalonService {
             averageRating = sum / reviews.length
             
         }
+
+        let  highlightsToReturn = null, salonTypesToReturn = null, salonPhotoToReturn = null
+        if (salon.highLights != null){
+            console.log("salon high lights is not null so split")
+            highlightsToReturn = salon.highLights.split(',')
+        }
         
-        const highlightsToReturn = salon.highLights.split(',')
-        const salonTypesToReturn = salon.salonTypes.split(',') 
-        const salonPhotoToReturn = salon.salonPhotos.split(',')
+        if (salon.salonTypes != null) {
+            console.log("salon types is not null so split")
+            salonTypesToReturn = salon.salonTypes.split(',') 
+        }
+        
+        if (salon.salonPhotos != null) {
+            console.log("salon photo is not null so split")
+            salonPhotoToReturn = salon.salonPhotos.split(',')
+        } else {
+            console.log("salon photo is null so no split")
+        }
+        
+        console.log("done spliting")
         const workDaysListToReturn = this.workDayStringToArray(salon.workDays)
         // const salonFormatted = this.salonRepository.create({...salon, 
         //     highLights: highlightsToReturn,

@@ -44,6 +44,10 @@ export class EmployeeEntity extends Profile{
     @OneToMany(() => AppointmentEntity, (appointment) => appointment.employee)
     appointments: AppointmentEntity[]
 
-    @ManyToOne(() => SalonEntity, (salon) => salon.employees)
+    @ManyToOne(() => SalonEntity, (salon) => salon.employees
+    // ,{ 
+    //     onDelete: 'CASCADE' 
+    // }
+    )
     salon: SalonEntity
 }   

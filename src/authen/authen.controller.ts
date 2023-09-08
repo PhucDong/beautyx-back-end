@@ -68,9 +68,9 @@ export class AuthenController {
 
     @Post('general/register/')
     @UsePipes(ValidationPipe)
-    register(@Body() newUser: registerDto, @Query("salonId") salonId?: number){
+    register(@Body() newUser: registerDto){
         console.log('registering general user, customer or manager')
-        return this.authenService.generalRegister(newUser, salonId)
+        return this.authenService.generalRegister(newUser)
     }
 
     // @Post('customer/login')

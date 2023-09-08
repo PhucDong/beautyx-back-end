@@ -72,7 +72,7 @@ export class AuthenService {
       'Refresh=; HttpOnly; Path=/authen/refresh; Max-Age=0'
     ];
   }
-  async generalRegister(newUser: registerDto, salonId?: number){
+  async generalRegister(newUser: registerDto){
 
     const manager = await this.managerService.getManagerByEmail(newUser.email)
     if (manager) throw new HttpException("email already exist in manager database", HttpStatus.BAD_REQUEST)
@@ -86,14 +86,14 @@ export class AuthenService {
       return customerToSave
 
     } else if (newUser.role = RoleEnum.Manager) {
-      const salonToUpdate = await this.salonService.getSalon(salonId)
-      console.log("new manager hashed password: " + password)
-      console.log("salon with id manager: " + salonToUpdate.manager);
-      if (salonToUpdate.manager) {
-        throw new HttpException("salon already has a manager, only the manager salon can update new manager", HttpStatus.BAD_REQUEST)
-      }
+      // const salonToUpdate = await this.salonService.getSalon(salonId)
+      // console.log("new manager hashed password: " + password)
+      // console.log("salon with id manager: " + salonToUpdate.manager);
+      // if (salonToUpdate.manager) {
+      //   throw new HttpException("salon already has a manager, only the manager salon can update new manager", HttpStatus.BAD_REQUEST)
+      // }
 
-      const managertoSave = await this.managerService.registerManager(salonId, {...newUser, password})
+      const managertoSave = await this.managerService.registerManager({...newUser, password})
       return managertoSave
 
 

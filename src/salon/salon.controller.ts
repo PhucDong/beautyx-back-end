@@ -14,8 +14,8 @@ import JwtAuthenGuard from 'src/authen/authenAccess.guard';
 export class SalonController {
     constructor(private readonly salonService: SalonService) {}
     
-    @Roles(RoleEnum.Manager)
-    @UseGuards(JwtAuthenGuard, RolesGuard)
+    // @Roles(RoleEnum.Manager)
+    // @UseGuards(JwtAuthenGuard, RolesGuard)
     @Get('')
     async getSalons(@Query("pageNumber", ParseIntPipe) pageNumber: number, @Query("pageSize", ParseIntPipe) pageSize: number, @Query("sortOption") sortOption?: string){
         const salons = await this.salonService.getSalons(pageSize, pageNumber, sortOption);

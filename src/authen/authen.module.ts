@@ -16,7 +16,8 @@ import { JwtRefreshTokenStrategy } from './jwtRefresh.strategy';
 import { SalonModule } from 'src/salon/salon.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([ManagerEntity, CustomerEntity, SalonEntity]),
+  imports: [
+    TypeOrmModule.forFeature([ManagerEntity, CustomerEntity, SalonEntity]),
     JwtModule.registerAsync({
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) => {

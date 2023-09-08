@@ -1,4 +1,4 @@
-import { IsArray, IsBoolean, IsDateString, IsNotEmpty, Matches } from "class-validator";
+import { IsArray, IsBoolean, IsDateString, IsEnum, IsNotEmpty, Matches } from "class-validator";
 import { ServiceEntity } from "src/TypeOrms/ServiceEntity";
 import { ApprovalStatusEnum } from "src/constants";
 
@@ -29,7 +29,7 @@ export class updateAppointmentDto{
     @Matches(/^([0-1]?[0-9]|2?[0-4]):([0-5]?[0-9]):([0-5]?[0-9])$/)
     estimatedEndTime: Date
 
-    @IsBoolean()
+    @IsEnum(ApprovalStatusEnum)
     approvalStatus: ApprovalStatusEnum
 
     

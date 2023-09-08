@@ -22,7 +22,11 @@ export class ServiceEntity {
     @Column()
     description: string
 
-    @ManyToOne(() => ServiceCategoryEntity, (serviceCategory) => serviceCategory.services)
+    @ManyToOne(() => ServiceCategoryEntity, (serviceCategory) => serviceCategory.services
+    // ,{ 
+    //     onDelete: 'CASCADE' 
+    // }
+    )
     serviceCategory: ServiceCategoryEntity
 
 

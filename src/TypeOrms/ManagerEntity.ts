@@ -15,4 +15,14 @@ export class ManagerEntity extends Profile{
         //unique: true
     })
     refreshToken: string;
+
+    @OneToOne(() => SalonEntity, (salon) => salon.manager
+    ,{ 
+        // onDelete: 'CASCADE' 
+        // nullable: true
+    }
+    )
+    @JoinColumn()
+    salon: SalonEntity
+
 }

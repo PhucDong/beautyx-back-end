@@ -21,11 +21,14 @@ export class ManagerController {
     getManager(@Param('id', ParseIntPipe) idToFind: number){
         return this.managerService.getManager(idToFind);
     }
-
-    @Post('create/salon/id/:id')
+    @Get('id/:id/dashboard')
+    getManagerDashboard(@Param('id', ParseIntPipe) idToFind: number){
+        return this.managerService.getManagerDashboard(idToFind);
+    }
+    @Post('create/')
     @UsePipes(ValidationPipe)
-    createManager(@Param('id', ParseIntPipe) salonId: number, @Body() newManager: createManagerDto){
-        return this.managerService.createManager(salonId, newManager)
+    createManager(@Body() newManager: createManagerDto){
+        return this.managerService.createManager(newManager)
     }
     
     
@@ -33,6 +36,22 @@ export class ManagerController {
     @UsePipes(ValidationPipe)
     async updateManager(@Param('id', ParseIntPipe) idToUpdate: number, @Body() updateDetails: createManagerDto){
         const updatedManager = await this.managerService.updateManager(idToUpdate, updateDetails)
+        return updatedManager;
+    }
+
+    @Put('assign/manager/:managerId/to/salon/:salonId')
+    @UsePipes(ValidationPipe)
+    async assignManagerToSalon(@Param('managerId', ParseIntPipe) managerId: number, @Param('salonId', ParseIntPipe) salonId: number){
+        const updatedManager = await this.managerService.assignManagerToSalon(managerId, salonId)
+        console.log("manager assignment constroller")
+        console.log(updatedManager)
+        return updatedManager;
+    }
+
+    @Put('remove/manager/:managerId/from/salon/:salonId')
+    @UsePipes(ValidationPipe)
+    async removeManagerFromSalon(@Param('managerId', ParseIntPipe) managerId: number, @Param('salonId', ParseIntPipe) salonId: number){
+        const updatedManager = await this.managerService.removeManagerFromSalon(managerId, salonId)
         return updatedManager;
     }
 

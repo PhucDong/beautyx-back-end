@@ -13,10 +13,18 @@ export class ServiceCategoryEntity{
     @Column()
     serviceCategoryName: string
 
-    @OneToMany(() => ServiceEntity, (serivce) => serivce.serviceCategory)
+    @OneToMany(() => ServiceEntity, (serivce) => serivce.serviceCategory
+    ,{ 
+        onDelete: 'CASCADE' 
+    }
+    )
     services: ServiceEntity[]
 
-    @ManyToOne(() => SalonEntity, (salon) => salon.serviceCategories)
+    @ManyToOne(() => SalonEntity, (salon) => salon.serviceCategories
+    ,{ 
+        onDelete: 'CASCADE' 
+    }
+    )
     salon: SalonEntity
 
 }

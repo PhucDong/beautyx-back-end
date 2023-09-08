@@ -41,7 +41,11 @@ export class AppointmentEntity {
     })
     approvalStatus: ApprovalStatusEnum
  
-    @ManyToOne(() => SalonEntity, (salon) => salon.appointments)
+    @ManyToOne(() => SalonEntity, (salon) => salon.appointments
+    // ,{ 
+    //     onDelete: 'CASCADE' 
+    // }
+    )
     salon: SalonEntity
     
     @ManyToOne(() => CustomerEntity, (customer) => customer.appointments)

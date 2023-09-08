@@ -33,7 +33,9 @@ export class SalonEntity {
     @Column()
     salonTypes: string;
 
-    @Column()
+    @Column({
+        nullable:true
+    })
     salonPhotos: string;
     
     @OneToMany(() => ServiceCategoryEntity, (serivceCategories) => serivceCategories.salon)
@@ -48,8 +50,13 @@ export class SalonEntity {
     @OneToMany(() => EmployeeEntity, (employee) => employee.salon)
     employees: EmployeeEntity[]
 
-    @OneToOne(() => ManagerEntity)
-    @JoinColumn()
+    @OneToOne(() => ManagerEntity, (manager) => manager.salon
+        ,{ 
+            // onDelete: 'CASCADE' 
+            // nullable: true
+        }
+    )
+    // @JoinColumn()
     manager: ManagerEntity
 
     // @ManyToMany(() => ReviewEntity)
