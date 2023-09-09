@@ -52,8 +52,11 @@ export class AuthenService {
       secret: this.configService.get('JWT_REFRESH_TOKEN_SECRET'),
       expiresIn: `${expirationTime}s`
     });
-    this.customerService.setCurrentRefreshToken(token, user.id);
-    
+    if (user.role == RoleEnum.Customer){
+      this.customerService.setCurrentRefreshToken(token, user.id);
+    } else if (user.role == RoleEnum.Manager) {
+      this.managerService.setCurrentRefreshToken(token, user.id);
+    }
     return `Refresh=${token}; HttpOnly; Path=/authen/refresh; Max-Age=${expirationTime}`;
 
     // const cookie = `Refresh=${token}; HttpOnly; Path=/authen/refresh; Max-Age=${this.configService.get('JWT_REFRESH_TOKEN_EXPIRATION_TIME') * 60}`;
