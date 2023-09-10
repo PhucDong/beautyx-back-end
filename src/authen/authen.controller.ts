@@ -47,8 +47,9 @@ export class AuthenController {
     @Get('refresh')
     refresh(@Req() request) {
       const accessCookie = this.authenService.getCookieWithJwtAccessToken(request.user);
-  
+      
       request.res.setHeader('Set-Cookie', accessCookie);
+      console.log('sending new access token after refresh')
       return request.user;
     }
     

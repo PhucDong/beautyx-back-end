@@ -30,8 +30,10 @@ export class JwtRefreshTokenStrategy extends PassportStrategy(Strategy, 'jwt-ref
     const refreshToken = request.cookies?.Refresh;
     console.log("the refresh token in the cookie: " + refreshToken)
     if (payload.role == RoleEnum.Customer) {
+      console.log("user requesting new access token after refresh is customer")
       return this.customerService.getUserIfRefreshTokenMatches(refreshToken, payload.sub);
-    } else {
+    } else if (payload.role == RoleEnum.Manager) {
+      console.log("user requesting new access token after refresh is customer")
       return this.managerService.getUserIfRefreshTokenMatches(refreshToken, payload.sub)
     }
   }

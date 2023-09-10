@@ -18,7 +18,8 @@ export class SalonService {
     async getSalons(pageSize: number, pageNumber: number, sortOption?: string){
         const salons = await this.salonRepository.find({relations: ['appointments']});
         
-        const salonToReturn = this.formatAndSortSalons(salons, sortOption)
+        const salonToReturn = await this.formatAndSortSalons(salons, sortOption)
+        //const salonPage = await this.customPagination(salonToReturn, salonToReturn.length, pageSize, pageNumber)
 
         return salonToReturn
     }
@@ -74,7 +75,7 @@ export class SalonService {
 
         }
         const salonToReturn = await this.formatAndSortSalons(filteredSalon, sortOption)
-        const salonPage = await this.customPagination(salonToReturn, pageSize, pageNumber)
+        const salonPage = await this.customPagination(salonToReturn, salonToReturn.length, pageSize, pageNumber)
         return salonPage
     }
     
@@ -164,7 +165,7 @@ export class SalonService {
         const foundListSorted = this.quickSortSearchScore(foundList)
         //console.log(foundList)
 
-        const pageToReturn = this.customPagination(foundListSorted, pageSize, pageNumber)
+        const pageToReturn = this.customPagination(foundListSorted, foundListSorted.length, pageSize, pageNumber)
         
         return pageToReturn
         
@@ -511,7 +512,7 @@ export class SalonService {
         // console.log('returning the formatted salon')
         return salonFormatted
     }
-    customPagination(salons, pageSize: number, pageNumber: number){
+    customPagination(salons, salonLength: number, pageSize: number, pageNumber: number){
         // console.log('page number: ' + pageNumber)
         // console.log('page size: ' + pageSize)
        
@@ -522,7 +523,19 @@ export class SalonService {
             salonPage.push(salons[pageStartIndex])
             // console.log(salonList[pageStartIndex].salonRating)
         }
-        return salonPage
+        
+        let totalPageNumber = salons.length / pageSize
+        if (salons.length % pageSize != 0) {
+            totalPageNumber++
+        }
+        console.log("list length: " + salons.length)
+        console.log("salon length: " + salonLength)
+        console.log("total page number: " + totalPageNumber)
+        console.log("math floor: " + Math.floor(totalPageNumber))
+        return {
+            salonPage,
+            totalPageNumber: Math.floor(totalPageNumber)
+        }
     }
     async formatAndSortSalons(salons, sortOption?: string){
         var formattedSalons = []
@@ -537,6 +550,8 @@ export class SalonService {
         let sortedSalons = []
         if (sortOption == 'alphabetical') {
             sortedSalons = this.quickSortSalonName(formattedSalons)
+        } else if (sortOption == 'rating'){
+            sortedSalons = this.quickSortSalonRating(formattedSalons)
         } else {
             sortedSalons = this.quickSortSalonRating(formattedSalons)
         }
