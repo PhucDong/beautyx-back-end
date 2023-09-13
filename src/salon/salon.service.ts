@@ -319,12 +319,16 @@ export class SalonService {
         if (!salonToUpdate) throw new HttpException('the salon with the given id cannot be found to update it\'s photos', HttpStatus.NOT_FOUND)
         const photoName = file.filename
         const photoNameParts = photoName.split('_')
-        const photoArray = salonToUpdate.salonPhotos.split(',')
+        let photoArray = []
+        if (salonToUpdate.salonPhotos != null){
+            photoArray = salonToUpdate.salonPhotos.split(',')
+        }
+        
         //console.log("photo name part 0: " + photoNameParts[0])
         console.log('salon photo string: ' + salonToUpdate.salonPhotos)
         console.log('the length of the photo array: ' + photoArray.length)
         console.log('photo array: ' + photoArray)
-        if (salonToUpdate.salonPhotos == ""){
+        if (salonToUpdate.salonPhotos == null){
             console.log("photo string is null")
             salonToUpdate.salonPhotos = photoName
             return this.salonRepository.save(salonToUpdate);
